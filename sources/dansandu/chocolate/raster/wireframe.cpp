@@ -15,19 +15,22 @@ namespace dansandu::chocolate::raster::wireframe
 void drawWireframe(const ConstantVerticesView vertices, const ConstantTrianglesView triangles, const Color solidColor,
                    Image& image)
 {
-    auto getPoint = [&](const int triangle, const int vertex)
-    {
-        const auto view = Slicer<dynamic, 0, 1, 2>::slice(vertices, triangles(triangle, vertex));
-        return Point2{{static_cast<int>(std::round(view.x())), static_cast<int>(std::round(view.y()))}};
-    };
+    auto slice = [&](const int triangle, const int vertex)
+    { return Slicer<dynamic, 0, 1, 3>::slice(vertices, triangles(triangle, vertex)); };
 
     for (auto triangle = 0; triangle < triangles.rowCount(); ++triangle)
     {
-        auto a = getPoint(triangle, 0);
-        auto b = getPoint(triangle, 1);
-        auto c = getPoint(triangle, 2);
+        auto a = slice(triangle, 0);
+        auto b = slice(triangle, 1);
+        auto c = slice(triangle, 2);
 
-        drawWireframeTriangle(a, b, c, [&image, solidColor](auto point) { image(point) = solidColor; });
+        drawWireframeTriangle(a, b, c,
+                              [&image, solidColor](auto point, auto, auto, auto)
+                              {
+                                  const auto p = Point2{{static_cast<int>(std::round(point.x())),
+                                                         static_cast<int>(std::round(point.y()))}};
+                                  image(p) = solidColor;
+                              });
     }
 }
 
