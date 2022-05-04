@@ -5,9 +5,10 @@
 namespace dansandu::chocolate::interpolation
 {
 
-Vector3 interpolate(const Vector3& a, const Vector3& b, const float x, const float y, const float epsilon);
-
-Vector3 interpolate(const Vector3& a, const Vector3& b, const Vector3& c, const float x, const float y,
+Vector3 interpolate(const ConstantVector3View a, const ConstantVector3View b, const float x, const float y,
                     const float epsilon);
+
+Vector3 interpolate(const ConstantVector3View a, const ConstantVector3View b, const ConstantVector3View c,
+                    const float x, const float y, const float epsilon);
 
 }
