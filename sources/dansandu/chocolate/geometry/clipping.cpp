@@ -1,25 +1,31 @@
 #include "dansandu/chocolate/geometry/clipping.hpp"
 #include "dansandu/chocolate/common.hpp"
 
+#include <vector>
+
+using dansandu::math::matrix::crossProduct;
+using dansandu::math::matrix::dotProduct;
+using dansandu::math::matrix::normalized;
 using dansandu::math::matrix::size_type;
-using dansandu::math::matrix::Slicer;
+using dansandu::math::matrix::sliceRow;
 
 namespace dansandu::chocolate::geometry::clipping
 {
 
-std::pair<Vertices, Triangles> clip(const ConstantVerticesView vertices, const ConstantTrianglesView triangles)
+std::tuple<Vertices, Triangles, Normals> clip(const ConstantVerticesView vertices,
+                                              const ConstantTrianglesView triangles, const ConstantNormalsView normals)
 {
-    auto getVertex = [&](auto triangle, auto vertex)
-    { return Slicer<dynamic, 0, 1, 4>::slice(vertices, triangles(triangle, vertex)); };
+    const auto getVertex = [&](auto t, auto v) { return sliceRow(vertices, triangles(t, v)); };
 
     auto vertexBuffer = std::vector<float>{};
     auto triangleBuffer = std::vector<size_type>{};
+    auto normalBuffer = std::vector<float>{};
 
-    for (auto triangle = 0; triangle < triangles.rowCount(); ++triangle)
+    for (auto t = 0; t < triangles.rowCount(); ++t)
     {
-        auto polygon = std::vector<Vector4>{{static_cast<Vector4>(getVertex(triangle, 0)),
-                                             static_cast<Vector4>(getVertex(triangle, 1)),
-                                             static_cast<Vector4>(getVertex(triangle, 2))}};
+        auto polygon =
+            std::vector<Vector4>{{static_cast<Vector4>(getVertex(t, 0)), static_cast<Vector4>(getVertex(t, 1)),
+                                  static_cast<Vector4>(getVertex(t, 2))}};
 
         auto clippedPolygon = std::vector<Vector4>{};
 
@@ -29,35 +35,35 @@ std::pair<Vertices, Triangles> clip(const ConstantVerticesView vertices, const C
             {
                 for (auto a = 0, b = 1; a < static_cast<size_type>(polygon.size()); b = (++a + 1) % polygon.size())
                 {
-                    constexpr auto w = 3;
-
-                    if (polygon[a](w) > side * polygon[a](axis))
+                    if (polygon[a].w() > side * polygon[a](axis))
                     {
                         clippedPolygon.push_back(polygon[a]);
                     }
 
-                    auto t = (side * polygon[a](w) - polygon[a](axis)) /
-                             (polygon[b](axis) - polygon[a](axis) - side * (polygon[b](w) - polygon[a](w)));
+                    auto t = (side * polygon[a].w() - polygon[a](axis)) /
+                             (polygon[b](axis) - polygon[a](axis) - side * (polygon[b].w() - polygon[a].w()));
 
                     if ((0.0f < t) & (t < 1.0f))
                     {
                         clippedPolygon.push_back(polygon[a] + (polygon[b] - polygon[a]) * t);
                     }
                 }
-
                 polygon = std::move(clippedPolygon);
             }
         }
 
-        auto offset = static_cast<size_type>(vertexBuffer.size()) / 4;
+        const auto offset = static_cast<size_type>(vertexBuffer.size()) / Vertices::staticColumnCount;
+
+        const auto normal = normals.rowCount() > 0 ? static_cast<Vector3>(sliceRow(normals, t)) : Vector3{};
 
         for (auto i = 0; i < static_cast<size_type>(polygon.size()); ++i)
         {
-            vertexBuffer.insert(vertexBuffer.end(), polygon[i].begin(), polygon[i].end());
+            vertexBuffer.insert(vertexBuffer.end(), polygon[i].cbegin(), polygon[i].cend());
 
             if (i > 1)
             {
                 triangleBuffer.insert(triangleBuffer.end(), {offset, offset + i - 1, offset + i});
+                normalBuffer.insert(normalBuffer.end(), normal.cbegin(), normal.cend());
             }
         }
     }
@@ -65,32 +71,38 @@ std::pair<Vertices, Triangles> clip(const ConstantVerticesView vertices, const C
     auto vertexCount = static_cast<size_type>(vertexBuffer.size()) / vertices.columnCount();
     auto triangleCount = static_cast<size_type>(triangleBuffer.size()) / triangles.columnCount();
 
-    return {Vertices{vertexCount, 4, std::move(vertexBuffer)}, Triangles{triangleCount, 3, std::move(triangleBuffer)}};
+    return {Vertices{vertexCount, vertices.columnCount(), std::move(vertexBuffer)},
+            Triangles{triangleCount, triangles.columnCount(), std::move(triangleBuffer)},
+            Normals{triangleCount, normals.columnCount(), std::move(normalBuffer)}};
 }
 
-Triangles cull(const ConstantVerticesView vertices, const ConstantTrianglesView triangles)
+std::pair<Triangles, Normals> cull(const ConstantVerticesView vertices, const ConstantTrianglesView triangles)
 {
-    auto getVertex = [&](auto triangle, auto vertex)
-    { return Slicer<dynamic, 0, 1, 3>::slice(vertices, triangles(triangle, vertex)); };
+    const auto getVertex = [&](const int t, const int v) { return Vector3Slicer::slice(vertices, triangles(t, v)); };
 
     auto triangleBuffer = std::vector<size_type>{};
+    auto normalBuffer = std::vector<float>{};
 
-    for (auto triangle = 0; triangle < triangles.rowCount(); ++triangle)
+    for (auto t = 0; t < triangles.rowCount(); ++t)
     {
-        auto o = getVertex(triangle, 2);
-        auto u = getVertex(triangle, 0) - o;
-        auto v = getVertex(triangle, 1) - o;
+        const auto a = getVertex(t, 0);
+        const auto b = getVertex(t, 1) - a;
+        const auto c = getVertex(t, 2) - a;
 
-        if (u.y() * v.x() - u.x() * v.y() < 0.0f)
+        const auto normal = normalized(crossProduct(b - a, c - a));
+
+        if (dotProduct(a, normal) < 0.0f)
         {
-            triangleBuffer.insert(triangleBuffer.end(),
-                                  {triangles(triangle, 0), triangles(triangle, 1), triangles(triangle, 2)});
+            const auto triangle = sliceRow(triangles, t);
+            triangleBuffer.insert(triangleBuffer.end(), triangle.cbegin(), triangle.cend());
+            normalBuffer.insert(normalBuffer.end(), normal.cbegin(), normal.cend());
         }
     }
 
-    auto triangleCount = static_cast<size_type>(triangleBuffer.size()) / triangles.columnCount();
+    const auto triangleCount = static_cast<size_type>(triangleBuffer.size()) / triangles.columnCount();
 
-    return {triangleCount, triangles.columnCount(), std::move(triangleBuffer)};
+    return {Triangles{triangleCount, triangles.columnCount(), std::move(triangleBuffer)},
+            Normals{triangleCount, Normals::staticColumnCount, std::move(normalBuffer)}};
 }
 
 }

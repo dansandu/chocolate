@@ -5,8 +5,9 @@
 namespace dansandu::chocolate::geometry::clipping
 {
 
-std::pair<Vertices, Triangles> clip(const ConstantVerticesView vertices, const ConstantTrianglesView triangles);
+std::tuple<Vertices, Triangles, Normals> clip(const ConstantVerticesView vertices,
+                                              const ConstantTrianglesView triangles, const ConstantNormalsView normals);
 
-Triangles cull(const ConstantVerticesView vertices, const ConstantTrianglesView triangles);
+std::pair<Triangles, Normals> cull(const ConstantVerticesView vertices, const ConstantTrianglesView triangles);
 
 }
