@@ -135,10 +135,10 @@ TEST_CASE("transform")
         const auto actual = viewport(width, height);
 
         // clang-format off
-        const auto expected = Matrix4{{{300.0f,   0.0f,  0.0f,  0.0f},
-                                       {  0.0f, 200.0f,  0.0f,  0.0f},
-                                       {  0.0f,   0.0f,  1.0f,  0.0f},
-                                       {300.0f, 200.0f, -1.0f,  1.0f}}};
+        const auto expected = Matrix4{{{300.0f,    0.0f,  0.0f,  0.0f},
+                                       {  0.0f, -200.0f,  0.0f,  0.0f},
+                                       {  0.0f,    0.0f,  1.0f,  0.0f},
+                                       {300.0f,  200.0f, -1.0f,  1.0f}}};
         // clang-format on
 
         REQUIRE(close(actual, expected, epsilon));

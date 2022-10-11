@@ -5,9 +5,27 @@
 namespace dansandu::chocolate::interpolation
 {
 
-Vector3 interpolate(const Vector3& a, const Vector3& b, const float x, const float y, const float epsilon);
+class BarycentricCoordinates
+{
+public:
+    BarycentricCoordinates(const ConstantVector3View a, const ConstantVector3View b, const ConstantVector3View c);
 
-Vector3 interpolate(const Vector3& a, const Vector3& b, const Vector3& c, const float x, const float y,
+    Vector3 operator()(const ConstantVector3View vertex) const;
+
+private:
+    Vector3 origin_;
+    Vector3 v0_;
+    Vector3 v1_;
+    float d00_;
+    float d01_;
+    float d11_;
+    float dnm_;
+};
+
+Vector3 interpolate(const ConstantVector3View a, const ConstantVector3View b, const float x, const float y,
                     const float epsilon);
+
+Vector3 interpolate(const ConstantVector3View a, const ConstantVector3View b, const ConstantVector3View c,
+                    const float x, const float y, const float epsilon);
 
 }

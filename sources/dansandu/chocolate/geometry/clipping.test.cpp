@@ -6,7 +6,8 @@
 #include "dansandu/canvas/image.hpp"
 #include "dansandu/chocolate/common.hpp"
 #include "dansandu/chocolate/geometry/plane.hpp"
-#include "dansandu/chocolate/raster/wireframe.hpp"
+#include "dansandu/chocolate/geometry/surface.hpp"
+#include "dansandu/chocolate/raster/drawing.hpp"
 #include "dansandu/chocolate/transform.hpp"
 #include "dansandu/math/common.hpp"
 #include "dansandu/math/matrix.hpp"
@@ -17,12 +18,14 @@ using dansandu::ballotin::file_system::writeBinaryFile;
 using dansandu::canvas::color::Colors;
 using dansandu::canvas::gif::getGifBinary;
 using dansandu::canvas::image::Image;
+using dansandu::chocolate::Normals;
 using dansandu::chocolate::Triangles;
 using dansandu::chocolate::Vertices;
 using dansandu::chocolate::geometry::clipping::clip;
 using dansandu::chocolate::geometry::clipping::cull;
 using dansandu::chocolate::geometry::plane::generatePlane;
-using dansandu::chocolate::raster::wireframe::drawWireframe;
+using dansandu::chocolate::geometry::surface::generateTriangleNormals;
+using dansandu::chocolate::raster::drawing::drawWireframe;
 using dansandu::chocolate::transform::dehomogenized;
 using dansandu::chocolate::transform::perspective;
 using dansandu::chocolate::transform::rotateByX;
@@ -41,20 +44,26 @@ TEST_CASE("clipping")
         const auto vertices =
             Vertices{{{-12.0f, 0.0f, 0.0f, 2.0f}, {0.0f, 12.0f, 0.0f, 3.0f}, {12.0f, 0.0f, 0.0f, 4.0f}}};
 
+        const auto triangles = Triangles{{0, 1, 2}};
+
+        const auto normals = generateTriangleNormals(vertices, triangles);
+
+        const auto [clippedVertices, clippedTriangles, clippedNormals] = clip(vertices, triangles, normals);
+
         const auto expectedVertices = Vertices{{{3.27273f, 3.27273f, 0.0f, 3.27273f},
                                                 {3.27273f, 0.00000f, 0.0f, 3.27273f},
                                                 {-2.76923f, 0.00000f, 0.0f, 2.76923f},
                                                 {-2.76923f, 2.76923f, 0.0f, 2.76923f}}};
 
-        const auto triangles = Triangles{{0, 1, 2}};
+        REQUIRE(close(clippedVertices, expectedVertices, 10.0e-5f));
 
         const auto expectedTriangles = Triangles{{{0, 1, 2}, {0, 2, 3}}};
 
-        const auto [clippedVertices, clippedTriangles] = clip(vertices, triangles);
-
-        REQUIRE(close(clippedVertices, expectedVertices, 10.0e-5f));
-
         REQUIRE(clippedTriangles == expectedTriangles);
+
+        const auto expectedNormals = Normals{{{0.0, 0.0, -1.0}, {0.0, 0.0, -1.0}}};
+
+        REQUIRE(close(clippedNormals, expectedNormals, 10.0e-5f));
     }
 
     SECTION("culling")
@@ -63,12 +72,15 @@ TEST_CASE("clipping")
 
         SECTION("visible")
         {
-            const auto vertices =
-                Vertices{{{0.0f, 12.0f, 0.0f, 3.0f}, {-12.0f, 0.0f, 0.0f, 2.0f}, {12.0f, 0.0f, 0.0f, 4.0f}}};
+            const auto vertices = Vertices{{{1.0, 0.0, -10.0, 1.0}, {0.0, 1.0, -10.0, 1.0}, {0.0, 0.0, -9.0, 1.0}}};
 
-            const auto culledTriangles = cull(vertices, triangles);
+            const auto [culledTriangles, normals] = cull(vertices, triangles);
 
             REQUIRE(culledTriangles == triangles);
+
+            const auto expectedNormals = Normals{{{0.57735027, 0.57735027, 0.57735027}}};
+
+            REQUIRE(close(expectedNormals, normals, 1.0e-5f));
         }
 
         SECTION("back-facing")
@@ -76,33 +88,39 @@ TEST_CASE("clipping")
             const auto vertices =
                 Vertices{{{-12.0f, 0.0f, 0.0f, 2.0f}, {0.0f, 12.0f, 0.0f, 3.0f}, {12.0f, 0.0f, 0.0f, 4.0f}}};
 
-            auto culledTriangles = cull(vertices, triangles);
+            const auto [culledTriangles, normals] = cull(vertices, triangles);
 
             REQUIRE(culledTriangles == Triangles{});
         }
     }
 
-    SECTION("clip and cull")
+    SECTION("cull and clip")
     {
         auto frames = std::vector<Image>{};
 
-        const auto [vertices, triangles] = generatePlane(2000.0f, 2000.0f, 50, 50);
+        const auto [vertices, triangles] = generatePlane(4000.0f, 1000.0f, 40, 10);
+
         const auto width = 200;
         const auto height = 200;
         const auto frameCount = 400;
 
         for (auto i = 0; i < frameCount; ++i)
         {
-            const auto radians = i * 1.0f * pi<float> / (frameCount - 1);
-            const auto transform = rotateByX(0.5f * pi<float>) * rotateByY(radians) * translate(0.0, 100.0, -500.0) *
-                                   perspective(1.0, 2000.0, 1.92, 1.0);
+            const auto rotation = i * 0.70f * pi<float> / (frameCount - 1);
+            const auto transform = rotateByX(-rotation) * translate(0.0, 100.0, -500.0);
 
-            auto mesh = clip(vertices * transform, triangles);
-            mesh.first = dehomogenized(mesh.first) * viewport(width - 1, height - 1);
-            mesh.second = cull(mesh.first, mesh.second);
+            auto mesh = std::make_tuple(vertices * transform, triangles, Normals{});
+
+            auto [culledTriangles, normals] = cull(std::get<0>(mesh), triangles);
+            std::get<1>(mesh) = std::move(culledTriangles);
+            std::get<2>(mesh) = std::move(normals);
+
+            mesh = clip(std::get<0>(mesh) * perspective(1.0, 2000.0, 1.92, 1.0), std::get<1>(mesh), std::get<2>(mesh));
+
+            std::get<0>(mesh) = dehomogenized(std::get<0>(mesh)) * viewport(width - 1, height - 1);
 
             auto frame = Image{width, height};
-            drawWireframe(mesh.first, mesh.second, Colors::turquoise, frame);
+            drawWireframe(std::get<0>(mesh), std::get<1>(mesh), Colors::turquoise, frame);
             frames.push_back(std::move(frame));
         }
 

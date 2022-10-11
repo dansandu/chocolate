@@ -7,10 +7,7 @@
 namespace dansandu::chocolate::raster::triangle
 {
 
-void drawWireframeTriangle(const ConstantPoint2View a, const ConstantPoint2View b, const ConstantPoint2View c,
-                           const std::function<void(ConstantPoint2View)>& shader);
-
-void drawTriangle(const ConstantPoint2View a, const ConstantPoint2View b, const ConstantPoint2View c,
-                  const std::function<void(ConstantPoint2View)>& shader);
+void drawTriangle(const ConstantVector3View a, const ConstantVector3View b, const ConstantVector3View c,
+                  const bool fill, const std::function<void(ConstantVector3View, float, float, float)>& shader);
 
 }

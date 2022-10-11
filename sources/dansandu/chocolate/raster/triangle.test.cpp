@@ -1,5 +1,6 @@
 #include "dansandu/chocolate/raster/triangle.hpp"
 #include "catchorg/catch/catch.hpp"
+#include "dansandu/ballotin/string.hpp"
 #include "dansandu/canvas/bitmap.hpp"
 #include "dansandu/canvas/color.hpp"
 #include "dansandu/canvas/image.hpp"
@@ -8,96 +9,153 @@
 
 #include <string>
 
+using Catch::Detail::Approx;
+using dansandu::ballotin::string::format;
 using dansandu::canvas::bitmap::readBitmapFile;
 using dansandu::canvas::bitmap::writeBitmapFile;
 using dansandu::canvas::color::Colors;
 using dansandu::canvas::image::Image;
-using dansandu::chocolate::Point2;
+using dansandu::chocolate::ConstantVector3View;
+using dansandu::chocolate::toColor;
+using dansandu::chocolate::Vector3;
 using dansandu::chocolate::raster::triangle::drawTriangle;
-using dansandu::chocolate::raster::triangle::drawWireframeTriangle;
 
-static void REQUIRE_IMAGE(const Image& actual, const std::string& fileName)
+static void REQUIRE_IMAGE(const Image& actualImage, const std::string& fileName)
 {
     const auto expectedImagePath = "resources/dansandu/chocolate/expected_" + fileName;
-    if (!(actual == readBitmapFile(expectedImagePath)))
+    const auto expectedImage = readBitmapFile(expectedImagePath);
+    if (actualImage == expectedImage)
+    {
+        SUCCEED("images match");
+    }
+    else
     {
         const auto actualImagePath = "target/actual_" + fileName;
-        writeBitmapFile(actualImagePath, actual);
-        FAIL("actual image does not match expected image " + expectedImagePath + " -- check " + actualImagePath +
-             " for comparison");
+        writeBitmapFile(actualImagePath, actualImage);
+        FAIL(format("actual image does not match expected image ", expectedImagePath, " -- check ", actualImagePath,
+                    " for comparison"));
     }
 }
+
+class SolidRgbShader
+{
+public:
+    explicit SolidRgbShader(Image& image) : image_{&image}
+    {
+    }
+
+    void operator()(const ConstantVector3View vertex, const float u, const float v, const float w) const
+    {
+        const auto red = Vector3{{1.0, 0.0, 0.0}};
+        const auto green = Vector3{{0.0, 1.0, 0.0}};
+        const auto blue = Vector3{{0.0, 0.0, 1.0}};
+        const auto color = u * red + v * green + w * blue;
+        (*image_)(vertex.x(), vertex.y()) = toColor(color);
+    }
+
+private:
+    Image* image_;
+};
+
+class WireframeShader
+{
+public:
+    explicit WireframeShader(Image& image) : image_{&image}
+    {
+    }
+
+    void operator()(const ConstantVector3View vertex, const float u, const float v, const float w) const
+    {
+        auto& color = (*image_)(vertex.x(), vertex.y());
+        color = color == Colors::black ? Colors::red : Colors::white;
+    }
+
+private:
+    Image* image_;
+};
 
 TEST_CASE("triangle")
 {
     auto actual = Image{50, 50};
 
-    auto shader = [&actual](auto point) { actual(point) = Colors::white; };
+    const auto solidShader = SolidRgbShader{actual};
 
-    auto wireframeShader = [&actual](auto point)
-    { actual(point) = (actual(point) == Colors::black ? Colors::red : Colors::green); };
+    const auto wireShader = WireframeShader(actual);
 
     SECTION("flat top triangle with bottom vertex to the left")
     {
-        const auto a = Point2{{15, 0}};
-        const auto b = Point2{{49, 0}};
-        const auto c = Point2{{0, 49}};
+        const auto a = Vector3{{15.0, 0.0, 0.0}};
+        const auto b = Vector3{{49.0, 0.0, 0.0}};
+        const auto c = Vector3{{0.0, 49.0, 0.0}};
 
-        drawTriangle(a, b, c, shader);
+        drawTriangle(a, b, c, true, solidShader);
 
-        drawWireframeTriangle(a, b, c, wireframeShader);
+        drawTriangle(a, b, c, false, wireShader);
 
         REQUIRE_IMAGE(actual, "flat_top_triangle_bottom_to_left.bmp");
     }
 
     SECTION("flat top triangle with bottom vertex to the right")
     {
-        const auto a = Point2{{15, 0}};
-        const auto b = Point2{{0, 0}};
-        const auto c = Point2{{49, 49}};
+        const auto a = Vector3{{15.0, 0.0, 0.0}};
+        const auto b = Vector3{{0.0, 0.0, 0.0}};
+        const auto c = Vector3{{49.0, 49.0, 0.0}};
 
-        drawTriangle(a, b, c, shader);
+        drawTriangle(a, b, c, true, solidShader);
 
-        drawWireframeTriangle(a, b, c, wireframeShader);
+        drawTriangle(a, b, c, false, wireShader);
 
         REQUIRE_IMAGE(actual, "flat_top_triangle_bottom_to_right.bmp");
     }
 
     SECTION("flat bottom tip to the left")
     {
-        const auto a = Point2{{0, 0}};
-        const auto b = Point2{{25, 49}};
-        const auto c = Point2{{49, 49}};
+        const auto a = Vector3{{49.0, 49.0, 0.0}};
+        const auto b = Vector3{{25.0, 49.0, 0.0}};
+        const auto c = Vector3{{0.0, 0.0, 0.0}};
 
-        drawTriangle(a, b, c, shader);
+        drawTriangle(a, b, c, true, solidShader);
 
-        drawWireframeTriangle(a, b, c, wireframeShader);
+        drawTriangle(a, b, c, false, wireShader);
 
         REQUIRE_IMAGE(actual, "flat_bottom_triangle_tip_to_the_left.bmp");
     }
 
     SECTION("flat bottom tip to the right")
     {
-        const auto a = Point2{{49, 0}};
-        const auto b = Point2{{25, 49}};
-        const auto c = Point2{{0, 49}};
+        const auto a = Vector3{{25.0, 49.0, 0.0}};
+        const auto b = Vector3{{0.0, 49.0, 0.0}};
+        const auto c = Vector3{{49.0, 0.0, 0.0}};
 
-        drawTriangle(a, b, c, shader);
+        drawTriangle(a, b, c, true, solidShader);
 
-        drawWireframeTriangle(a, b, c, wireframeShader);
+        drawTriangle(a, b, c, false, wireShader);
 
         REQUIRE_IMAGE(actual, "flat_bottom_triangle_tip_to_the_right.bmp");
     }
 
+    SECTION("flat bottom tip to the left sharp")
+    {
+        const auto a = Vector3{{0.0, 0.0, 0.0}};
+        const auto b = Vector3{{30.0, 20.0, 0.0}};
+        const auto c = Vector3{{49.0, 20.0, 0.0}};
+
+        drawTriangle(a, b, c, true, solidShader);
+
+        drawTriangle(a, b, c, false, wireShader);
+
+        REQUIRE_IMAGE(actual, "flat_bottom_triangle_tip_to_the_left_sharp.bmp");
+    }
+
     SECTION("obtuse triangle")
     {
-        const auto a = Point2{{0, 0}};
-        const auto b = Point2{{5, 19}};
-        const auto c = Point2{{49, 49}};
+        const auto a = Vector3{{49.0, 35.0, 0.0}};
+        const auto b = Vector3{{0.0, 0.0, 0.0}};
+        const auto c = Vector3{{5.0, 19.0, 0.0}};
 
-        drawTriangle(a, b, c, shader);
+        drawTriangle(a, b, c, true, solidShader);
 
-        drawWireframeTriangle(a, b, c, wireframeShader);
+        drawTriangle(a, b, c, false, wireShader);
 
         REQUIRE_IMAGE(actual, "obtuse_triangle.bmp");
     }
