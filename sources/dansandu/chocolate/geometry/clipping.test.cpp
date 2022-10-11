@@ -7,7 +7,7 @@
 #include "dansandu/chocolate/common.hpp"
 #include "dansandu/chocolate/geometry/plane.hpp"
 #include "dansandu/chocolate/geometry/surface.hpp"
-#include "dansandu/chocolate/raster/wireframe.hpp"
+#include "dansandu/chocolate/raster/drawing.hpp"
 #include "dansandu/chocolate/transform.hpp"
 #include "dansandu/math/common.hpp"
 #include "dansandu/math/matrix.hpp"
@@ -25,7 +25,7 @@ using dansandu::chocolate::geometry::clipping::clip;
 using dansandu::chocolate::geometry::clipping::cull;
 using dansandu::chocolate::geometry::plane::generatePlane;
 using dansandu::chocolate::geometry::surface::generateTriangleNormals;
-using dansandu::chocolate::raster::wireframe::drawWireframe;
+using dansandu::chocolate::raster::drawing::drawWireframe;
 using dansandu::chocolate::transform::dehomogenized;
 using dansandu::chocolate::transform::perspective;
 using dansandu::chocolate::transform::rotateByX;
@@ -61,7 +61,7 @@ TEST_CASE("clipping")
 
         REQUIRE(clippedTriangles == expectedTriangles);
 
-        const auto expectedNormals = Normals{{{0, 1, 2}, {0, 2, 3}}};
+        const auto expectedNormals = Normals{{{0.0, 0.0, -1.0}, {0.0, 0.0, -1.0}}};
 
         REQUIRE(close(clippedNormals, expectedNormals, 10.0e-5f));
     }
@@ -72,12 +72,15 @@ TEST_CASE("clipping")
 
         SECTION("visible")
         {
-            const auto vertices =
-                Vertices{{{0.0f, 12.0f, 0.0f, 3.0f}, {-12.0f, 0.0f, 0.0f, 2.0f}, {12.0f, 0.0f, 0.0f, 4.0f}}};
+            const auto vertices = Vertices{{{1.0, 0.0, -10.0, 1.0}, {0.0, 1.0, -10.0, 1.0}, {0.0, 0.0, -9.0, 1.0}}};
 
             const auto [culledTriangles, normals] = cull(vertices, triangles);
 
             REQUIRE(culledTriangles == triangles);
+
+            const auto expectedNormals = Normals{{{0.57735027, 0.57735027, 0.57735027}}};
+
+            REQUIRE(close(expectedNormals, normals, 1.0e-5f));
         }
 
         SECTION("back-facing")
@@ -104,7 +107,7 @@ TEST_CASE("clipping")
         for (auto i = 0; i < frameCount; ++i)
         {
             const auto rotation = i * 0.70f * pi<float> / (frameCount - 1);
-            const auto transform = rotateByX(rotation) * translate(0.0, 100.0, -500.0);
+            const auto transform = rotateByX(-rotation) * translate(0.0, 100.0, -500.0);
 
             auto mesh = std::make_tuple(vertices * transform, triangles, Normals{});
 

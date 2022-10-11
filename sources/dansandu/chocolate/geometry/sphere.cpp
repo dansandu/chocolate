@@ -34,7 +34,7 @@ std::pair<Vertices, Triangles> generateSphere(const float radius, const int yRes
         triangles(triangle, 2) = (j + 1) % yResolution + 1;
         ++triangle;
 
-        const auto yRadians = 2 * j * pi<float> / yResolution;
+        const auto yRadians = 2.0f * j * pi<float> / yResolution;
 
         for (auto k = 0; k < zResolution; ++k)
         {

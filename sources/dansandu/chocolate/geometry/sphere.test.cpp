@@ -4,7 +4,7 @@
 #include "dansandu/canvas/color.hpp"
 #include "dansandu/canvas/gif.hpp"
 #include "dansandu/canvas/image.hpp"
-#include "dansandu/chocolate/raster/wireframe.hpp"
+#include "dansandu/chocolate/raster/drawing.hpp"
 #include "dansandu/chocolate/transform.hpp"
 #include "dansandu/math/common.hpp"
 #include "dansandu/range/range.hpp"
@@ -15,7 +15,7 @@ using dansandu::canvas::color::Colors;
 using dansandu::canvas::gif::getGifBinary;
 using dansandu::canvas::image::Image;
 using dansandu::chocolate::geometry::sphere::generateSphere;
-using dansandu::chocolate::raster::wireframe::drawWireframe;
+using dansandu::chocolate::raster::drawing::drawWireframe;
 using dansandu::chocolate::transform::dehomogenized;
 using dansandu::chocolate::transform::perspective;
 using dansandu::chocolate::transform::rotateByY;

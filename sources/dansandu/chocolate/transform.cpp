@@ -100,7 +100,7 @@ Matrix4 viewport(const float width, const float height)
 {
     const auto x = width / 2.0f;
     const auto y = height / 2.0f;
-    return scale(x, y, 1.0f) * translate(x, y, -1.0f);
+    return scale(x, -y, 1.0f) * translate(x, y, -1.0f);
 }
 
 Vertices dehomogenized(const ConstantVerticesView vertices)

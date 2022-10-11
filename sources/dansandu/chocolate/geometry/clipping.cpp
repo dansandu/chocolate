@@ -86,8 +86,8 @@ std::pair<Triangles, Normals> cull(const ConstantVerticesView vertices, const Co
     for (auto t = 0; t < triangles.rowCount(); ++t)
     {
         const auto a = getVertex(t, 0);
-        const auto b = getVertex(t, 1) - a;
-        const auto c = getVertex(t, 2) - a;
+        const auto b = getVertex(t, 1);
+        const auto c = getVertex(t, 2);
 
         const auto normal = normalized(crossProduct(b - a, c - a));
 
