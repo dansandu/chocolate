@@ -9,7 +9,6 @@
 
 #include <string>
 
-using Catch::Detail::Approx;
 using dansandu::ballotin::string::format;
 using dansandu::canvas::bitmap::readBitmapFile;
 using dansandu::canvas::bitmap::writeBitmapFile;
@@ -37,50 +36,24 @@ static void REQUIRE_IMAGE(const Image& actualImage, const std::string& fileName)
     }
 }
 
-class SolidRgbShader
+TEST_CASE("triangle")
 {
-public:
-    explicit SolidRgbShader(Image& image) : image_{&image}
-    {
-    }
+    auto image = Image{50, 50};
 
-    void operator()(const ConstantVector3View vertex, const float u, const float v, const float w) const
+    const auto solidShader = [&image](const ConstantVector3View vertex, const float u, const float v, const float w)
     {
         const auto red = Vector3{{1.0, 0.0, 0.0}};
         const auto green = Vector3{{0.0, 1.0, 0.0}};
         const auto blue = Vector3{{0.0, 0.0, 1.0}};
         const auto color = u * red + v * green + w * blue;
-        (*image_)(vertex.x(), vertex.y()) = toColor(color);
-    }
+        image(vertex.x(), vertex.y()) = toColor(color);
+    };
 
-private:
-    Image* image_;
-};
-
-class WireframeShader
-{
-public:
-    explicit WireframeShader(Image& image) : image_{&image}
+    const auto wireframeShader = [&image](const ConstantVector3View vertex, const float, const float, const float)
     {
-    }
-
-    void operator()(const ConstantVector3View vertex, const float u, const float v, const float w) const
-    {
-        auto& color = (*image_)(vertex.x(), vertex.y());
+        auto& color = image(vertex.x(), vertex.y());
         color = color == Colors::black ? Colors::red : Colors::white;
-    }
-
-private:
-    Image* image_;
-};
-
-TEST_CASE("triangle")
-{
-    auto actual = Image{50, 50};
-
-    const auto solidShader = SolidRgbShader{actual};
-
-    const auto wireShader = WireframeShader(actual);
+    };
 
     SECTION("flat top triangle with bottom vertex to the left")
     {
@@ -90,9 +63,9 @@ TEST_CASE("triangle")
 
         drawTriangle(a, b, c, true, solidShader);
 
-        drawTriangle(a, b, c, false, wireShader);
+        drawTriangle(a, b, c, false, wireframeShader);
 
-        REQUIRE_IMAGE(actual, "flat_top_triangle_bottom_to_left.bmp");
+        REQUIRE_IMAGE(image, "flat_top_triangle_bottom_to_left.bmp");
     }
 
     SECTION("flat top triangle with bottom vertex to the right")
@@ -103,9 +76,9 @@ TEST_CASE("triangle")
 
         drawTriangle(a, b, c, true, solidShader);
 
-        drawTriangle(a, b, c, false, wireShader);
+        drawTriangle(a, b, c, false, wireframeShader);
 
-        REQUIRE_IMAGE(actual, "flat_top_triangle_bottom_to_right.bmp");
+        REQUIRE_IMAGE(image, "flat_top_triangle_bottom_to_right.bmp");
     }
 
     SECTION("flat bottom tip to the left")
@@ -116,9 +89,9 @@ TEST_CASE("triangle")
 
         drawTriangle(a, b, c, true, solidShader);
 
-        drawTriangle(a, b, c, false, wireShader);
+        drawTriangle(a, b, c, false, wireframeShader);
 
-        REQUIRE_IMAGE(actual, "flat_bottom_triangle_tip_to_the_left.bmp");
+        REQUIRE_IMAGE(image, "flat_bottom_triangle_tip_to_the_left.bmp");
     }
 
     SECTION("flat bottom tip to the right")
@@ -129,9 +102,9 @@ TEST_CASE("triangle")
 
         drawTriangle(a, b, c, true, solidShader);
 
-        drawTriangle(a, b, c, false, wireShader);
+        drawTriangle(a, b, c, false, wireframeShader);
 
-        REQUIRE_IMAGE(actual, "flat_bottom_triangle_tip_to_the_right.bmp");
+        REQUIRE_IMAGE(image, "flat_bottom_triangle_tip_to_the_right.bmp");
     }
 
     SECTION("flat bottom tip to the left sharp")
@@ -142,9 +115,9 @@ TEST_CASE("triangle")
 
         drawTriangle(a, b, c, true, solidShader);
 
-        drawTriangle(a, b, c, false, wireShader);
+        drawTriangle(a, b, c, false, wireframeShader);
 
-        REQUIRE_IMAGE(actual, "flat_bottom_triangle_tip_to_the_left_sharp.bmp");
+        REQUIRE_IMAGE(image, "flat_bottom_triangle_tip_to_the_left_sharp.bmp");
     }
 
     SECTION("obtuse triangle")
@@ -155,8 +128,8 @@ TEST_CASE("triangle")
 
         drawTriangle(a, b, c, true, solidShader);
 
-        drawTriangle(a, b, c, false, wireShader);
+        drawTriangle(a, b, c, false, wireframeShader);
 
-        REQUIRE_IMAGE(actual, "obtuse_triangle.bmp");
+        REQUIRE_IMAGE(image, "obtuse_triangle.bmp");
     }
 }
