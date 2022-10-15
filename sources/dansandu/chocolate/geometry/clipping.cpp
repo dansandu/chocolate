@@ -15,7 +15,7 @@ namespace dansandu::chocolate::geometry::clipping
 std::tuple<Vertices, Triangles, Normals> clip(const ConstantVerticesView vertices,
                                               const ConstantTrianglesView triangles, const ConstantNormalsView normals)
 {
-    const auto getVertex = [&](auto t, auto v) { return sliceRow(vertices, triangles(t, v)); };
+    const auto getVertex = [&](auto t, auto v) { return static_cast<Vector4>(sliceRow(vertices, triangles(t, v))); };
 
     auto vertexBuffer = std::vector<float>{};
     auto triangleBuffer = std::vector<size_type>{};
@@ -23,9 +23,7 @@ std::tuple<Vertices, Triangles, Normals> clip(const ConstantVerticesView vertice
 
     for (auto t = 0; t < triangles.rowCount(); ++t)
     {
-        auto polygon =
-            std::vector<Vector4>{{static_cast<Vector4>(getVertex(t, 0)), static_cast<Vector4>(getVertex(t, 1)),
-                                  static_cast<Vector4>(getVertex(t, 2))}};
+        auto polygon = std::vector<Vector4>{{getVertex(t, 0), getVertex(t, 1), getVertex(t, 2)}};
 
         auto clippedPolygon = std::vector<Vector4>{};
 
