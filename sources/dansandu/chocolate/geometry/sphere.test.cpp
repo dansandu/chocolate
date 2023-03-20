@@ -53,6 +53,10 @@ TEST_CASE("sphere")
     if (!match)
     {
         writeBinaryFile("target/actual_sphere.gif", actual);
+        FAIL("sphere animation is not a match");
     }
-    REQUIRE(match);
+    else
+    {
+        SUCCEED("sphere animation is a match");
+    }
 }

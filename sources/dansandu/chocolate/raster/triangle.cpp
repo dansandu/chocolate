@@ -27,17 +27,11 @@ static std::vector<int> getYxOrderPermutation(const std::vector<Point2>& points)
     return permutation;
 }
 
-static Point2 getRounded(const ConstantVector3View vector)
-{
-    return Point2{{static_cast<int>(std::round(vector.x())), static_cast<int>(std::round(vector.y()))}};
-}
-
 // order of vertices/points must be the initial order passed to the draw function
 // order of permutation must be tip, left, right
 // order of function callback barycentric coordinates are the order of vertices/points
 static void drawFlatTriangle(const std::vector<Vector3>& vertices, const std::vector<Point2>& points,
-                             const std::vector<int>& permutation,
-                             const std::function<void(ConstantVector3View, float, float, float)>& shader)
+                             const std::vector<int>& permutation, const ShaderType& shader)
 {
     const auto barycentric = BarycentricCoordinates{vertices[0], vertices[1], vertices[2]};
 
@@ -86,7 +80,7 @@ static void drawFlatTriangle(const std::vector<Vector3>& vertices, const std::ve
 
 static void drawFlatTriangleEdges(const std::vector<Vector3>& vertices, const std::vector<Point2>& points,
                                   const std::vector<int>& permutation, const bool drawFlatEdge,
-                                  const std::function<void(ConstantVector3View, float, float, float)>& shader)
+                                  const ShaderType& shader)
 {
     const auto barycentric = BarycentricCoordinates{vertices[0], vertices[1], vertices[2]};
 
@@ -113,11 +107,23 @@ static void drawFlatTriangleEdges(const std::vector<Vector3>& vertices, const st
     }
 }
 
-void drawTriangle(const ConstantVector3View a, const ConstantVector3View b, const ConstantVector3View c,
-                  const bool fill, const std::function<void(ConstantVector3View, float, float, float)>& shader)
+static Point2 getRounded(const ConstantVector3View vector)
 {
-    auto vertices = std::vector<Vector3>{{static_cast<Vector3>(a), static_cast<Vector3>(b), static_cast<Vector3>(c)}};
+    const auto x = static_cast<int>(std::round(vector.x()));
+    const auto y = static_cast<int>(std::round(vector.y()));
+    return Point2{{x, y}};
+}
+
+void drawTriangle(const ConstantVector3View a, const ConstantVector3View b, const ConstantVector3View c,
+                  const bool fill, const ShaderType& shader)
+{
     auto points = std::vector<Point2>{{getRounded(a), getRounded(b), getRounded(c)}};
+    if ((points[0] == points[1]) | (points[1] == points[2]))
+    {
+        return;
+    }
+
+    auto vertices = std::vector<Vector3>{{static_cast<Vector3>(a), static_cast<Vector3>(b), static_cast<Vector3>(c)}};
 
     auto permutation = getYxOrderPermutation(points);
 

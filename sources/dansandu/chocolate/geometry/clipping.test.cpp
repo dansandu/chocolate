@@ -131,7 +131,11 @@ TEST_CASE("clipping")
         if (!match)
         {
             writeBinaryFile("target/actual_clip_and_cull.gif", actual);
+            FAIL("clip & cull animation is not a match");
         }
-        REQUIRE(match);
+        else
+        {
+            SUCCEED("clip & cull animation is a match");
+        }
     }
 }

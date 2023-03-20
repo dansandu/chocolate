@@ -53,6 +53,10 @@ TEST_CASE("cuboid")
     if (!match)
     {
         writeBinaryFile("target/actual_cuboid.gif", actual);
+        FAIL("cuboid animation is not a match");
     }
-    REQUIRE(match);
+    else
+    {
+        SUCCEED("cuboid animation is a match");
+    }
 }

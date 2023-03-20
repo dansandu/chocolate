@@ -15,4 +15,8 @@ void drawFlat(const ConstantVerticesView vertices, const ConstantTrianglesView t
 void drawWireframe(const ConstantVerticesView vertices, const ConstantTrianglesView triangles,
                    const dansandu::canvas::color::Color color, dansandu::canvas::image::Image& image);
 
+void drawTexture(const ConstantVerticesView vertices, const ConstantTrianglesView triangles,
+                 const ConstantTextureMappingView textureMapping, const dansandu::canvas::image::Image& texture,
+                 dansandu::canvas::image::Image& image);
+
 }
