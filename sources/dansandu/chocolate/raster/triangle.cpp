@@ -20,7 +20,7 @@ static std::vector<int> getYxOrderPermutation(const std::vector<Point2>& points)
     auto permutation = getIdentityPermutation(points.size());
 
     const auto comparator = [&points](const auto a, const auto b)
-    { return (points[a].y() < points[b].y()) | ((points[a].y() == points[b].y()) & (points[a].x() < points[b].x())); };
+    { return points[a].y() < points[b].y() || (points[a].y() == points[b].y() && points[a].x() < points[b].x()); };
 
     std::sort(permutation.begin(), permutation.end(), comparator);
 
@@ -56,7 +56,7 @@ static void drawFlatTriangle(const std::vector<Vector3>& vertices, const std::ve
         const auto leftXbegin = leftTracer.position().x();
         auto leftXend = leftXbegin;
 
-        while (leftTracer.step() & (y == leftTracer.position().y()))
+        while (leftTracer.step() && y == leftTracer.position().y())
         {
             leftXend = leftTracer.position().x();
         }
@@ -64,7 +64,7 @@ static void drawFlatTriangle(const std::vector<Vector3>& vertices, const std::ve
         const auto rightXbegin = rightTracer.position().x();
         auto rightXend = rightXbegin;
 
-        while (rightTracer.step() & (y == rightTracer.position().y()))
+        while (rightTracer.step() && y == rightTracer.position().y())
         {
             rightXend = rightTracer.position().x();
         }
@@ -121,8 +121,8 @@ void drawTriangle(const ConstantVector3View a, const ConstantVector3View b, cons
 
     auto permutation = getYxOrderPermutation(points);
 
-    if ((points[permutation[0]].y() != points[permutation[1]].y()) &
-        (points[permutation[1]].y() != points[permutation[2]].y()))
+    if (points[permutation[0]].y() != points[permutation[1]].y() &&
+        points[permutation[1]].y() != points[permutation[2]].y())
     {
         const auto x = (vertices[permutation[1]].y() - vertices[permutation[0]].y()) *
                            (vertices[permutation[2]].x() - vertices[permutation[0]].x()) /
