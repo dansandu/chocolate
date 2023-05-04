@@ -11,7 +11,6 @@
 #include "dansandu/chocolate/transform.hpp"
 #include "dansandu/math/common.hpp"
 #include "dansandu/math/matrix.hpp"
-#include "dansandu/range/range.hpp"
 
 using dansandu::ballotin::file_system::readBinaryFile;
 using dansandu::ballotin::file_system::writeBinaryFile;
@@ -34,8 +33,6 @@ using dansandu::chocolate::transform::translate;
 using dansandu::chocolate::transform::viewport;
 using dansandu::math::common::pi;
 using dansandu::math::matrix::close;
-
-using namespace dansandu::range::range;
 
 TEST_CASE("clipping")
 {
@@ -96,7 +93,7 @@ TEST_CASE("clipping")
 
     SECTION("cull and clip")
     {
-        auto frames = std::vector<Image>{};
+        auto images = std::vector<Image>{};
 
         const auto [vertices, triangles] = generatePlane(4000.0f, 1000.0f, 40, 10);
 
@@ -121,11 +118,17 @@ TEST_CASE("clipping")
 
             auto frame = Image{width, height};
             drawWireframe(std::get<0>(mesh), std::get<1>(mesh), Colors::turquoise, frame);
-            frames.push_back(std::move(frame));
+            images.push_back(std::move(frame));
+        }
+
+        auto frames = std::vector<const Image*>{};
+        for (const auto& image : images)
+        {
+            frames.push_back(&image);
         }
 
         const auto delayCentiseconds = 3;
-        const auto actual = getGifBinary(frames | map([](auto& f) { return &f; }) | toVector(), delayCentiseconds);
+        const auto actual = getGifBinary(frames, delayCentiseconds);
 
         auto match = actual == readBinaryFile("resources/dansandu/chocolate/expected_clip_and_cull.gif");
         if (!match)

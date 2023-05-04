@@ -7,7 +7,6 @@
 #include "dansandu/chocolate/raster/drawing.hpp"
 #include "dansandu/chocolate/transform.hpp"
 #include "dansandu/math/common.hpp"
-#include "dansandu/range/range.hpp"
 
 using dansandu::ballotin::file_system::readBinaryFile;
 using dansandu::ballotin::file_system::writeBinaryFile;
@@ -23,11 +22,9 @@ using dansandu::chocolate::transform::translate;
 using dansandu::chocolate::transform::viewport;
 using dansandu::math::common::pi;
 
-using namespace dansandu::range::range;
-
 TEST_CASE("cuboid")
 {
-    auto frames = std::vector<Image>{};
+    auto images = std::vector<Image>{};
 
     const auto [vertices, triangles] = generateCuboid(150.0, 150.0, 150.0);
     const auto width = 200;
@@ -43,11 +40,17 @@ TEST_CASE("cuboid")
 
         auto frame = Image{width, height};
         drawWireframe(tVertices, triangles, Colors::magenta, frame);
-        frames.push_back(std::move(frame));
+        images.push_back(std::move(frame));
+    }
+
+    auto frames = std::vector<const Image*>{};
+    for (const auto& image : images)
+    {
+        frames.push_back(&image);
     }
 
     const auto delayCentiseconds = 3;
-    const auto actual = getGifBinary(frames | map([](auto& f) { return &f; }) | toVector(), delayCentiseconds);
+    const auto actual = getGifBinary(frames, delayCentiseconds);
 
     auto match = actual == readBinaryFile("resources/dansandu/chocolate/expected_cuboid.gif");
     if (!match)
