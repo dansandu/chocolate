@@ -31,7 +31,8 @@ static std::vector<int> getYxOrderPermutation(const std::vector<Point2>& points)
 // order of permutation must be tip, left, right
 // order of function callback barycentric coordinates are the order of vertices/points
 static void drawFlatTriangle(const std::vector<Vector3>& vertices, const std::vector<Point2>& points,
-                             const std::vector<int>& permutation, const ShaderType& shader)
+                             const std::vector<int>& permutation, const ShaderType& shader, const bool wireframe,
+                             const bool drawFlatEdge)
 {
     const auto barycentric = BarycentricCoordinates{vertices[0], vertices[1], vertices[2]};
 
@@ -47,26 +48,7 @@ static void drawFlatTriangle(const std::vector<Vector3>& vertices, const std::ve
 
     for (auto y = tip.y(); y != left.y() + dy; y += dy)
     {
-        const auto leftXbegin = leftTracer.position().x();
-        auto leftXend = leftXbegin;
-
-        while (leftTracer.step() && y == leftTracer.position().y())
-        {
-            leftXend = leftTracer.position().x();
-        }
-
-        const auto rightXbegin = rightTracer.position().x();
-        auto rightXend = rightXbegin;
-
-        while (rightTracer.step() && y == rightTracer.position().y())
-        {
-            rightXend = rightTracer.position().x();
-        }
-
-        const auto minimum = std::min(leftXbegin, leftXend);
-        const auto maximum = std::max(rightXbegin, rightXend);
-
-        for (auto x = minimum; x <= maximum; ++x)
+        const auto interpolateAndShade = [&](const int x)
         {
             const auto tolerance = 1.0e-5f;
             const auto vertex = interpolate(vertices[permutation[0]], vertices[permutation[1]],
@@ -74,36 +56,43 @@ static void drawFlatTriangle(const std::vector<Vector3>& vertices, const std::ve
             const auto coordinates = barycentric(vertex);
 
             shader(vertex, coordinates.x(), coordinates.y(), coordinates.z());
-        }
-    }
-}
+        };
 
-static void drawFlatTriangleEdges(const std::vector<Vector3>& vertices, const std::vector<Point2>& points,
-                                  const std::vector<int>& permutation, const bool drawFlatEdge,
-                                  const ShaderType& shader)
-{
-    const auto barycentric = BarycentricCoordinates{vertices[0], vertices[1], vertices[2]};
+        const auto drawHorizontally = (drawFlatEdge && y == left.y()) || !wireframe;
 
-    const auto drawLine = [&](const Point2& start, const Point2& end)
-    {
-        auto lineTracer = LineTracer{start, end};
+        const auto leftXbegin = leftTracer.position().x();
+        auto leftXend = leftXbegin;
+
         do
         {
-            const auto tolerance = 1.0e-5f;
-            const auto position = lineTracer.position();
-            const auto vertex = interpolate(vertices[permutation[0]], vertices[permutation[1]],
-                                            vertices[permutation[2]], position.x(), position.y(), tolerance);
-            const auto coordinates = barycentric(vertex);
-            shader(vertex, coordinates.x(), coordinates.y(), coordinates.z());
-        } while (lineTracer.step());
-    };
+            leftXend = leftTracer.position().x();
+            if (!drawHorizontally)
+            {
+                interpolateAndShade(leftXend);
+            }
+        } while (leftTracer.step() && y == leftTracer.position().y());
 
-    drawLine(points[permutation[0]], points[permutation[1]]);
-    drawLine(points[permutation[0]], points[permutation[2]]);
+        const auto rightXbegin = rightTracer.position().x();
+        auto rightXend = rightXbegin;
 
-    if (drawFlatEdge)
-    {
-        drawLine(points[permutation[1]], points[permutation[2]]);
+        do
+        {
+            rightXend = rightTracer.position().x();
+            if (!drawHorizontally)
+            {
+                interpolateAndShade(rightXend);
+            }
+        } while (rightTracer.step() && y == rightTracer.position().y());
+
+        if (drawHorizontally)
+        {
+            const auto minimumX = std::min(leftXbegin, leftXend);
+            const auto maximumX = std::max(rightXbegin, rightXend);
+            for (auto x = minimumX; x <= maximumX; ++x)
+            {
+                interpolateAndShade(x);
+            }
+        }
     }
 }
 
@@ -115,10 +104,10 @@ static Point2 getRounded(const ConstantVector3View vector)
 }
 
 void drawTriangle(const ConstantVector3View a, const ConstantVector3View b, const ConstantVector3View c,
-                  const bool fill, const ShaderType& shader)
+                  const ShaderType& shader, const bool wireframe)
 {
     auto points = std::vector<Point2>{{getRounded(a), getRounded(b), getRounded(c)}};
-    if ((points[0] == points[1]) | (points[1] == points[2]))
+    if (points[0] == points[1] || points[1] == points[2])
     {
         return;
     }
@@ -150,38 +139,26 @@ void drawTriangle(const ConstantVector3View a, const ConstantVector3View b, cons
             std::swap(permutation[2], permutation[1]);
         }
 
-        if (fill)
-        {
-            drawFlatTriangle(vertices, points, {permutation[0], permutation[1], permutation[2]}, shader);
-            drawFlatTriangle(vertices, points, {permutation[3], permutation[1], permutation[2]}, shader);
-        }
-        else
-        {
-            drawFlatTriangleEdges(vertices, points, {permutation[0], permutation[1], permutation[2]}, false, shader);
-            drawFlatTriangleEdges(vertices, points, {permutation[3], permutation[1], permutation[2]}, false, shader);
-        }
+        const auto drawFlatEdge = false;
+
+        drawFlatTriangle(vertices, points, {permutation[0], permutation[1], permutation[2]}, shader, wireframe,
+                         drawFlatEdge);
+        drawFlatTriangle(vertices, points, {permutation[3], permutation[1], permutation[2]}, shader, wireframe,
+                         drawFlatEdge);
     }
     else if (points[permutation[0]].y() == points[permutation[1]].y())
     {
-        if (fill)
-        {
-            drawFlatTriangle(vertices, points, {permutation[2], permutation[0], permutation[1]}, shader);
-        }
-        else
-        {
-            drawFlatTriangleEdges(vertices, points, {permutation[2], permutation[0], permutation[1]}, true, shader);
-        }
+        const auto drawFlatEdge = true;
+
+        drawFlatTriangle(vertices, points, {permutation[2], permutation[0], permutation[1]}, shader, wireframe,
+                         drawFlatEdge);
     }
     else
     {
-        if (fill)
-        {
-            drawFlatTriangle(vertices, points, {permutation[0], permutation[1], permutation[2]}, shader);
-        }
-        else
-        {
-            drawFlatTriangleEdges(vertices, points, {permutation[0], permutation[1], permutation[2]}, true, shader);
-        }
+        const auto drawFlatEdge = true;
+
+        drawFlatTriangle(vertices, points, {permutation[0], permutation[1], permutation[2]}, shader, wireframe,
+                         drawFlatEdge);
     }
 }
 

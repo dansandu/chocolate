@@ -130,15 +130,12 @@ TEST_CASE("clipping")
         const auto delayCentiseconds = 3;
         const auto actual = getGifBinary(frames, delayCentiseconds);
 
-        auto match = actual == readBinaryFile("resources/dansandu/chocolate/expected_clip_and_cull.gif");
-        if (!match)
+        auto clipAndCullMatchesGif =
+            (actual == readBinaryFile("resources/dansandu/chocolate/expected_clip_and_cull.gif"));
+        if (!clipAndCullMatchesGif)
         {
             writeBinaryFile("target/actual_clip_and_cull.gif", actual);
-            FAIL("clip & cull animation is not a match");
         }
-        else
-        {
-            SUCCEED("clip & cull animation is a match");
-        }
+        REQUIRE(clipAndCullMatchesGif);
     }
 }

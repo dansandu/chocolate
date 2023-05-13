@@ -46,14 +46,29 @@ public:
             });
     }
 
+    bool assertionEnded(Catch::AssertionStats const& assertionStats) override
+    {
+        if (!assertionStats.assertionResult.isOk())
+        {
+            progressBar_.reset();
+        }
+        return TestEventListenerBase::assertionEnded(assertionStats);
+    }
+
     void testCaseStarting(Catch::TestCaseInfo const& testInfo) override
     {
-        progressBar_->updateSummary(testInfo.name);
+        if (progressBar_)
+        {
+            progressBar_->updateSummary(testInfo.name);
+        }
     }
 
     void testCaseEnded(Catch::TestCaseStats const& testCaseStats) override
     {
-        progressBar_->advance();
+        if (progressBar_)
+        {
+            progressBar_->advance();
+        }
     }
 
     void testGroupEnded(Catch::TestGroupStats const& testGroupStats) override

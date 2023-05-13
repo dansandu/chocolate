@@ -46,16 +46,16 @@ static void REQUIRE_IMAGE(const Image& actualImage, const std::string& fileName)
 {
     const auto expectedImagePath = "resources/dansandu/chocolate/expected_" + fileName;
     const auto expectedImage = readBitmapFile(expectedImagePath);
-    if (actualImage == expectedImage)
-    {
-        SUCCEED("images match");
-    }
-    else
+    if (actualImage != expectedImage)
     {
         const auto actualImagePath = "target/actual_" + fileName;
         writeBitmapFile(actualImagePath, actualImage);
         FAIL(format("actual image does not match expected image ", expectedImagePath, " -- check ", actualImagePath,
                     " for comparison"));
+    }
+    else
+    {
+        SUCCEED(format("the image ", fileName, " matches ", expectedImagePath));
     }
 }
 
@@ -105,16 +105,13 @@ TEST_CASE("drawing")
         const auto delayCentiseconds = 3;
         const auto actual = getGifBinary(frames, delayCentiseconds);
 
-        auto match = actual == readBinaryFile("resources/dansandu/chocolate/expected_flat_shading.gif");
-        if (!match)
+        auto flatShadingMatchesGif =
+            (actual == readBinaryFile("resources/dansandu/chocolate/expected_flat_shading.gif"));
+        if (!flatShadingMatchesGif)
         {
             writeBinaryFile("target/actual_flat_shading.gif", actual);
-            FAIL("flat shading animation is not a match");
         }
-        else
-        {
-            SUCCEED("flat shading animation is a match");
-        }
+        REQUIRE(flatShadingMatchesGif);
     }
 
     SECTION("wireframe")

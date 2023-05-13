@@ -40,7 +40,7 @@ void drawFlat(const ConstantVerticesView vertices, const ConstantTrianglesView t
         const auto shader = [&](const auto vertex, const auto, const auto, const auto)
         { image(vertex.x(), vertex.y()) = color; };
 
-        drawTriangle(a, b, c, true, shader);
+        drawTriangle(a, b, c, shader, false);
     }
 }
 
@@ -59,7 +59,7 @@ void drawWireframe(const ConstantVerticesView vertices, const ConstantTrianglesV
         const auto shader = [&](const auto vertex, const auto, const auto, const auto)
         { image(vertex.x(), vertex.y()) = color; };
 
-        drawTriangle(a, b, c, false, shader);
+        drawTriangle(a, b, c, shader, true);
     }
 }
 
@@ -97,12 +97,8 @@ void drawTexture(const ConstantVerticesView vertices, const ConstantTrianglesVie
             tape.push_back(w);
         };
 
-        drawTriangle(a, b, c, true, shader);
+        drawTriangle(a, b, c, shader, false);
     }
-
-    const auto rows = static_cast<int>(tape.size() / 3);
-    const auto tapeMatrix = dansandu::math::matrix::Matrix<float>{rows, 3, std::move(tape)};
-    LOG_DEBUG(tapeMatrix);
 }
 
 }

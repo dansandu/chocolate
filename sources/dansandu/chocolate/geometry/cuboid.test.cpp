@@ -52,14 +52,10 @@ TEST_CASE("cuboid")
     const auto delayCentiseconds = 3;
     const auto actual = getGifBinary(frames, delayCentiseconds);
 
-    auto match = actual == readBinaryFile("resources/dansandu/chocolate/expected_cuboid.gif");
-    if (!match)
+    auto cuboidAnimationMatchesGif = (actual == readBinaryFile("resources/dansandu/chocolate/expected_cuboid.gif"));
+    if (!cuboidAnimationMatchesGif)
     {
         writeBinaryFile("target/actual_cuboid.gif", actual);
-        FAIL("cuboid animation is not a match");
     }
-    else
-    {
-        SUCCEED("cuboid animation is a match");
-    }
+    REQUIRE(cuboidAnimationMatchesGif);
 }

@@ -52,14 +52,10 @@ TEST_CASE("sphere")
     const auto delayCentiseconds = 3;
     const auto actual = getGifBinary(frames, delayCentiseconds);
 
-    auto match = actual == readBinaryFile("resources/dansandu/chocolate/expected_sphere.gif");
-    if (!match)
+    auto sphereMatchesGif = (actual == readBinaryFile("resources/dansandu/chocolate/expected_sphere.gif"));
+    if (!sphereMatchesGif)
     {
         writeBinaryFile("target/actual_sphere.gif", actual);
-        FAIL("sphere animation is not a match");
     }
-    else
-    {
-        SUCCEED("sphere animation is a match");
-    }
+    REQUIRE(sphereMatchesGif);
 }
