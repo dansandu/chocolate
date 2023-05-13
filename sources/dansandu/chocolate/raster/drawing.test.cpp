@@ -11,7 +11,6 @@
 #include "dansandu/chocolate/geometry/sphere.hpp"
 #include "dansandu/chocolate/transform.hpp"
 #include "dansandu/math/common.hpp"
-#include "dansandu/range/range.hpp"
 
 using dansandu::ballotin::file_system::readBinaryFile;
 using dansandu::ballotin::file_system::writeBinaryFile;
@@ -43,8 +42,6 @@ using dansandu::chocolate::transform::viewport;
 using dansandu::math::common::pi;
 using dansandu::math::matrix::normalized;
 
-using namespace dansandu::range::range;
-
 static void REQUIRE_IMAGE(const Image& actualImage, const std::string& fileName)
 {
     const auto expectedImagePath = "resources/dansandu/chocolate/expected_" + fileName;
@@ -66,7 +63,7 @@ TEST_CASE("drawing")
 {
     SECTION("flat")
     {
-        auto frames = std::vector<Image>{};
+        auto images = std::vector<Image>{};
 
         const auto [vertices, triangles] = generateSphere(150.0f, 18, 18);
 
@@ -96,11 +93,17 @@ TEST_CASE("drawing")
             auto frame = Image{width, height};
             drawFlat(std::get<0>(mesh), std::get<1>(mesh), std::get<2>(mesh), Colors::black, Colors::magenta,
                      diffuseDirection, frame);
-            frames.push_back(std::move(frame));
+            images.push_back(std::move(frame));
+        }
+
+        auto frames = std::vector<const Image*>{};
+        for (const auto& image : images)
+        {
+            frames.push_back(&image);
         }
 
         const auto delayCentiseconds = 3;
-        const auto actual = getGifBinary(frames | map([](auto& f) { return &f; }) | toVector(), delayCentiseconds);
+        const auto actual = getGifBinary(frames, delayCentiseconds);
 
         auto match = actual == readBinaryFile("resources/dansandu/chocolate/expected_flat_shading.gif");
         if (!match)
