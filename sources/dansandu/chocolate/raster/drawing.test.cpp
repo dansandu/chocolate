@@ -7,6 +7,8 @@
 #include "dansandu/canvas/gif.hpp"
 #include "dansandu/canvas/image.hpp"
 #include "dansandu/chocolate/geometry/clipping.hpp"
+#include "dansandu/chocolate/geometry/cuboid.hpp"
+#include "dansandu/chocolate/geometry/plane.hpp"
 #include "dansandu/chocolate/geometry/sphere.hpp"
 #include "dansandu/chocolate/transform.hpp"
 #include "dansandu/math/common.hpp"
@@ -19,38 +21,40 @@ using dansandu::canvas::bitmap::writeBitmapFile;
 using dansandu::canvas::color::Colors;
 using dansandu::canvas::gif::getGifBinary;
 using dansandu::canvas::image::Image;
+using dansandu::chocolate::dynamic;
 using dansandu::chocolate::Normals;
+using dansandu::chocolate::TextureMapping;
 using dansandu::chocolate::Triangles;
 using dansandu::chocolate::Vector3;
-using dansandu::chocolate::Vector3Slicer;
 using dansandu::chocolate::Vertices;
 using dansandu::chocolate::geometry::clipping::clip;
 using dansandu::chocolate::geometry::clipping::cull;
+using dansandu::chocolate::geometry::cuboid::generateCuboid;
+using dansandu::chocolate::geometry::plane::generatePlane;
 using dansandu::chocolate::geometry::sphere::generateSphere;
 using dansandu::chocolate::raster::drawing::drawFlat;
+using dansandu::chocolate::raster::drawing::drawTexture;
 using dansandu::chocolate::raster::drawing::drawWireframe;
-using dansandu::chocolate::transform::dehomogenized;
-using dansandu::chocolate::transform::perspective;
-using dansandu::chocolate::transform::rotateByY;
-using dansandu::chocolate::transform::translate;
-using dansandu::chocolate::transform::viewport;
 using dansandu::math::common::pi;
 using dansandu::math::matrix::normalized;
+using dansandu::math::matrix::Slicer;
+
+using namespace dansandu::chocolate::transform;
 
 static void REQUIRE_IMAGE(const Image& actualImage, const std::string& fileName)
 {
     const auto expectedImagePath = "resources/dansandu/chocolate/expected_" + fileName;
     const auto expectedImage = readBitmapFile(expectedImagePath);
-    if (actualImage == expectedImage)
-    {
-        SUCCEED("images match");
-    }
-    else
+    if (actualImage != expectedImage)
     {
         const auto actualImagePath = "target/actual_" + fileName;
         writeBitmapFile(actualImagePath, actualImage);
         FAIL(format("actual image does not match expected image ", expectedImagePath, " -- check ", actualImagePath,
                     " for comparison"));
+    }
+    else
+    {
+        SUCCEED(format("the image ", fileName, " matches ", expectedImagePath));
     }
 }
 
@@ -100,12 +104,13 @@ TEST_CASE("drawing")
         const auto delayCentiseconds = 3;
         const auto actual = getGifBinary(frames, delayCentiseconds);
 
-        auto match = actual == readBinaryFile("resources/dansandu/chocolate/expected_flat_shading.gif");
-        if (!match)
+        auto flatShadingMatchesGif =
+            (actual == readBinaryFile("resources/dansandu/chocolate/expected_flat_shading.gif"));
+        if (!flatShadingMatchesGif)
         {
             writeBinaryFile("target/actual_flat_shading.gif", actual);
         }
-        REQUIRE(match);
+        REQUIRE(flatShadingMatchesGif);
     }
 
     SECTION("wireframe")
@@ -119,5 +124,51 @@ TEST_CASE("drawing")
         drawWireframe(vertices, triangles, Colors::green, actual);
 
         REQUIRE_IMAGE(actual, "wireframe.bmp");
+    }
+
+    SECTION("simple texture")
+    {
+        const auto texture = readBitmapFile("resources/dansandu/chocolate/simple_texture.bmp");
+
+        const auto [vertices, triangles] = generatePlane(100.0f, 100.0f, 5, 5);
+
+        const auto textureCoodinates = vertices * translate(50.0f, 50.0f, 0.0f);
+
+        const auto textureMapping =
+            TextureMapping{Slicer<0, 0, dynamic, 2>::slice(textureCoodinates, textureCoodinates.rowCount())};
+
+        const auto tVertices = vertices * shearX(0.5, 0.0) * scale(1.0, -1.0, 1.0) * translate(100.0f, 100.0f, 10.0f);
+
+        auto image = Image{200, 200, Colors::davysGrey};
+        drawTexture(tVertices, triangles, textureMapping, texture, image);
+
+        REQUIRE_IMAGE(image, "simple_texture.bmp");
+    }
+
+    SECTION("perspective texture")
+    {
+        const auto width = 200;
+        const auto height = 200;
+
+        const auto texture = readBitmapFile("resources/dansandu/chocolate/simple_texture.bmp");
+
+        const auto [vertices, triangles] = generatePlane(100.0f, 100.0f, 5, 5);
+
+        const auto textureCoodinates = vertices * translate(50.0f, 50.0f, 0.0f);
+
+        const auto textureMapping =
+            TextureMapping{Slicer<0, 0, dynamic, 2>::slice(textureCoodinates, textureCoodinates.rowCount())};
+
+        const auto rotation = -0.25f * pi<float>;
+
+        const auto transform = rotateByX(rotation) * translate(0.0, 0.0, -80.0) * perspective(1.0, 2000.0, 1.92, 1.0);
+
+        const auto tVertices = dehomogenized(vertices * transform) * viewport(width - 1, height - 1);
+
+        auto image = Image{width, height, Colors::davysGrey};
+
+        drawTexture(tVertices, triangles, textureMapping, texture, image);
+
+        REQUIRE_IMAGE(image, "perspective_texture.bmp");
     }
 }

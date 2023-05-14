@@ -4,21 +4,28 @@
 using dansandu::chocolate::Matrix4;
 using dansandu::chocolate::Vector3;
 using dansandu::chocolate::Vertices;
-using dansandu::chocolate::transform::dehomogenized;
-using dansandu::chocolate::transform::lookAt;
-using dansandu::chocolate::transform::perspective;
-using dansandu::chocolate::transform::rotateByX;
-using dansandu::chocolate::transform::rotateByY;
-using dansandu::chocolate::transform::rotateByZ;
-using dansandu::chocolate::transform::scale;
-using dansandu::chocolate::transform::translate;
-using dansandu::chocolate::transform::viewport;
 using dansandu::math::common::pi;
 using dansandu::math::matrix::close;
+
+using namespace dansandu::chocolate::transform;
 
 TEST_CASE("transform")
 {
     const auto epsilon = 1.0e-5f;
+
+    SECTION("shearX")
+    {
+        const auto actual = shearX(3.0f, 7.0f);
+
+        // clang-format off
+        const auto expected = Matrix4{{{1.0f, 0.0f, 0.0f, 0.0f},
+                                       {3.0f, 1.0f, 0.0f, 0.0f},
+                                       {7.0f, 0.0f, 1.0f, 0.0f},
+                                       {0.0f, 0.0f, 0.0f, 1.0f}}};
+        // clang-format on
+
+        REQUIRE(close(actual, expected, epsilon));
+    }
 
     SECTION("scale")
     {

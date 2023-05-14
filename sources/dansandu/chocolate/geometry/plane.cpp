@@ -39,6 +39,7 @@ std::pair<Vertices, Triangles> generatePlane(const float width, const float heig
         const auto j = vertex / widthResolution;
         vertices(vertex, 0) = i * xDelta - width / 2.0f;
         vertices(vertex, 1) = j * yDelta - height / 2.0f;
+        vertices(vertex, 2) = 0.0f;
         vertices(vertex, 3) = 1.0f;
 
         if (i + 1 != widthResolution && j + 1 != heightResolution)

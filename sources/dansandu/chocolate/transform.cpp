@@ -9,6 +9,16 @@ using dansandu::math::matrix::normalized;
 namespace dansandu::chocolate::transform
 {
 
+Matrix4 shearX(const float y, const float z)
+{
+    // clang-format off
+    return Matrix4{{{1.0f, 0.0f, 0.0f, 0.0f},
+                    {   y, 1.0f, 0.0f, 0.0f},
+                    {   z, 0.0f, 1.0f, 0.0f},
+                    {0.0f, 0.0f, 0.0f, 1.0f}}};
+    // clang-format on
+}
+
 Matrix4 scale(const float x, const float y, const float z)
 {
     // clang-format off

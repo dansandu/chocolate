@@ -37,8 +37,10 @@ void drawFlat(const ConstantVerticesView vertices, const ConstantTrianglesView t
         const auto gamma = std::max(0.0f, dotProduct(-diffuseDirection, normal));
         const auto color = toColor(objectColorVec + diffuseColorVec * gamma);
 
-        drawTriangle(a, b, c, true,
-                     [&image, color](auto vertex, auto, auto, auto) { image(vertex.x(), vertex.y()) = color; });
+        const auto shader = [&](const auto vertex, const auto, const auto, const auto)
+        { image(vertex.x(), vertex.y()) = color; };
+
+        drawTriangle(a, b, c, shader, false);
     }
 }
 
@@ -54,8 +56,42 @@ void drawWireframe(const ConstantVerticesView vertices, const ConstantTrianglesV
         auto b = slice(triangle, 1);
         auto c = slice(triangle, 2);
 
-        drawTriangle(a, b, c, false,
-                     [&image, color](auto vertex, auto, auto, auto) { image(vertex.x(), vertex.y()) = color; });
+        const auto shader = [&](const auto vertex, const auto, const auto, const auto)
+        { image(vertex.x(), vertex.y()) = color; };
+
+        drawTriangle(a, b, c, shader, true);
+    }
+}
+
+void drawTexture(const ConstantVerticesView vertices, const ConstantTrianglesView triangles,
+                 const ConstantTextureMappingView textureMapping, const Image& texture, Image& image)
+{
+    const auto getVertex = [&](const int t, const int v) { return Vector3Slicer::slice(vertices, triangles(t, v)); };
+
+    const auto getTextureMapping = [&](const int t, const int v) { return sliceRow(textureMapping, triangles(t, v)); };
+
+    for (auto t = 0; t < triangles.rowCount(); ++t)
+    {
+        const auto a = getVertex(t, 0);
+        const auto b = getVertex(t, 1);
+        const auto c = getVertex(t, 2);
+
+        const auto ta = getTextureMapping(t, 0);
+        const auto tb = getTextureMapping(t, 1);
+        const auto tc = getTextureMapping(t, 2);
+
+        const auto shader = [&](const auto vertex, const auto u, const auto v, const auto w)
+        {
+            const auto up = u / a.z();
+            const auto vp = v / b.z();
+            const auto wp = w / c.z();
+            const auto td = getRounded((up * ta + vp * tb + wp * tc) / (up + vp + wp));
+            const auto tx = std::min(texture.width() - 1, std::max(0, td.x()));
+            const auto ty = std::min(texture.height() - 1, std::max(0, td.y()));
+            image(vertex.x(), vertex.y()) = texture(tx, ty);
+        };
+
+        drawTriangle(a, b, c, shader, false);
     }
 }
 

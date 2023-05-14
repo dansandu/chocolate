@@ -25,14 +25,10 @@ using dansandu::chocolate::geometry::clipping::cull;
 using dansandu::chocolate::geometry::plane::generatePlane;
 using dansandu::chocolate::geometry::surface::generateTriangleNormals;
 using dansandu::chocolate::raster::drawing::drawWireframe;
-using dansandu::chocolate::transform::dehomogenized;
-using dansandu::chocolate::transform::perspective;
-using dansandu::chocolate::transform::rotateByX;
-using dansandu::chocolate::transform::rotateByY;
-using dansandu::chocolate::transform::translate;
-using dansandu::chocolate::transform::viewport;
 using dansandu::math::common::pi;
 using dansandu::math::matrix::close;
+
+using namespace dansandu::chocolate::transform;
 
 TEST_CASE("clipping")
 {
@@ -130,11 +126,12 @@ TEST_CASE("clipping")
         const auto delayCentiseconds = 3;
         const auto actual = getGifBinary(frames, delayCentiseconds);
 
-        auto match = actual == readBinaryFile("resources/dansandu/chocolate/expected_clip_and_cull.gif");
-        if (!match)
+        auto clipAndCullMatchesGif =
+            (actual == readBinaryFile("resources/dansandu/chocolate/expected_clip_and_cull.gif"));
+        if (!clipAndCullMatchesGif)
         {
             writeBinaryFile("target/actual_clip_and_cull.gif", actual);
         }
-        REQUIRE(match);
+        REQUIRE(clipAndCullMatchesGif);
     }
 }
