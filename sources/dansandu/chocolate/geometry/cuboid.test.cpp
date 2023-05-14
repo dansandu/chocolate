@@ -15,12 +15,9 @@ using dansandu::canvas::gif::getGifBinary;
 using dansandu::canvas::image::Image;
 using dansandu::chocolate::geometry::cuboid::generateCuboid;
 using dansandu::chocolate::raster::drawing::drawWireframe;
-using dansandu::chocolate::transform::dehomogenized;
-using dansandu::chocolate::transform::perspective;
-using dansandu::chocolate::transform::rotateByY;
-using dansandu::chocolate::transform::translate;
-using dansandu::chocolate::transform::viewport;
 using dansandu::math::common::pi;
+
+using namespace dansandu::chocolate::transform;
 
 TEST_CASE("cuboid")
 {

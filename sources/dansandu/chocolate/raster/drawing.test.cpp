@@ -156,8 +156,6 @@ TEST_CASE("drawing")
 
         const auto textureCoodinates = vertices * translate(50.0f, 50.0f, 0.0f);
 
-        LOG_DEBUG(textureCoodinates.rowCount());
-
         const auto textureMapping =
             TextureMapping{Slicer<0, 0, dynamic, 2>::slice(textureCoodinates, textureCoodinates.rowCount())};
 
