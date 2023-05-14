@@ -5,6 +5,8 @@
 namespace dansandu::chocolate::transform
 {
 
+Matrix4 shearX(const float y, const float z);
+
 Matrix4 scale(const float x, const float y, const float z);
 
 Matrix4 translate(const float x, const float y, const float z);

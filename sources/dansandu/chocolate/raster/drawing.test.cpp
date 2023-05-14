@@ -8,6 +8,7 @@
 #include "dansandu/canvas/image.hpp"
 #include "dansandu/chocolate/geometry/clipping.hpp"
 #include "dansandu/chocolate/geometry/cuboid.hpp"
+#include "dansandu/chocolate/geometry/plane.hpp"
 #include "dansandu/chocolate/geometry/sphere.hpp"
 #include "dansandu/chocolate/transform.hpp"
 #include "dansandu/math/common.hpp"
@@ -20,27 +21,25 @@ using dansandu::canvas::bitmap::writeBitmapFile;
 using dansandu::canvas::color::Colors;
 using dansandu::canvas::gif::getGifBinary;
 using dansandu::canvas::image::Image;
+using dansandu::chocolate::dynamic;
 using dansandu::chocolate::Normals;
 using dansandu::chocolate::TextureMapping;
 using dansandu::chocolate::Triangles;
 using dansandu::chocolate::Vector3;
-using dansandu::chocolate::Vector3Slicer;
 using dansandu::chocolate::Vertices;
 using dansandu::chocolate::geometry::clipping::clip;
 using dansandu::chocolate::geometry::clipping::cull;
 using dansandu::chocolate::geometry::cuboid::generateCuboid;
+using dansandu::chocolate::geometry::plane::generatePlane;
 using dansandu::chocolate::geometry::sphere::generateSphere;
 using dansandu::chocolate::raster::drawing::drawFlat;
 using dansandu::chocolate::raster::drawing::drawTexture;
 using dansandu::chocolate::raster::drawing::drawWireframe;
-using dansandu::chocolate::transform::dehomogenized;
-using dansandu::chocolate::transform::perspective;
-using dansandu::chocolate::transform::rotateByY;
-using dansandu::chocolate::transform::rotateByZ;
-using dansandu::chocolate::transform::translate;
-using dansandu::chocolate::transform::viewport;
 using dansandu::math::common::pi;
 using dansandu::math::matrix::normalized;
+using dansandu::math::matrix::Slicer;
+
+using namespace dansandu::chocolate::transform;
 
 static void REQUIRE_IMAGE(const Image& actualImage, const std::string& fileName)
 {
@@ -131,76 +130,47 @@ TEST_CASE("drawing")
     {
         const auto texture = readBitmapFile("resources/dansandu/chocolate/simple_texture.bmp");
 
-        const auto vertices = Vertices{{
-            {40.0, 10.0, -3.0, 1.0},
-            {10.0, 190.0, -1.0, 1.0},
-            {190.0, 190.0, -1.0, 1.0},
-            {160.0, 10.0, -3.0, 1.0},
-        }};
+        const auto [vertices, triangles] = generatePlane(100.0f, 100.0f, 5, 5);
 
-        const auto triangles = Triangles{{
-            {0, 1, 2},
-            {0, 2, 3},
-        }};
+        const auto textureCoodinates = vertices * translate(50.0f, 50.0f, 0.0f);
 
-        const auto textureMapping = TextureMapping{{
-            {0.0, 0.0},
-            {0.0, 100.0},
-            {100.0, 100.0},
-            {100.0, 0.0},
-        }};
+        const auto textureMapping =
+            TextureMapping{Slicer<0, 0, dynamic, 2>::slice(textureCoodinates, textureCoodinates.rowCount())};
 
-        auto image = Image{200, 200};
-        drawTexture(vertices, triangles, textureMapping, texture, image);
-        drawWireframe(vertices, triangles, Colors::magenta, image);
-        writeBitmapFile("target/actual_simple_texture.bmp", image);
+        const auto tVertices = vertices * shearX(0.5, 0.0) * scale(1.0, -1.0, 1.0) * translate(100.0f, 100.0f, 10.0f);
+
+        auto image = Image{200, 200, Colors::davysGrey};
+        drawTexture(tVertices, triangles, textureMapping, texture, image);
+
+        REQUIRE_IMAGE(image, "simple_texture.bmp");
     }
 
-    /*SECTION("texture mapping")
+    SECTION("perspective texture")
     {
-        const auto texture = readBitmapFile("resources/dansandu/chocolate/cuboid_texture.bmp");
-
-        const auto textureMapping = TextureMapping{
-            {{49.0, 50.0},  {0.0, 50.0},   {0.0, 99.0},    {49.0, 99.0},   {100.0, 99.0}, {100.0, 49.0},
-             {150.0, 49.0}, {150.0, 99.0}, {50.0, 0.0},    {50.0, 49.0},   {100.0, 49.0}, {100.0, 0.0},
-             {50.0, 100.0}, {50.0, 149.0}, {100.0, 149.0}, {100.0, 100.0}, {99.0, 50.0},  {50.0, 50.0},
-             {50.0, 99.0},  {99.0, 99.0},  {150.0, 50.0},  {150.0, 99.0},  {199.0, 99.0}, {199.0, 50.0}}};
-
-        auto frames = std::vector<Image>{};
-
-        const auto [vertices, triangles] = generateCuboid(150.0, 150.0, 150.0);
         const auto width = 200;
         const auto height = 200;
-        const auto frameCount = 300;
 
-        for (auto i = 0; i < frameCount; ++i)
-        {
-            const auto radians = i * 2.0f * pi<float> / (frameCount - 1);
+        const auto texture = readBitmapFile("resources/dansandu/chocolate/simple_texture.bmp");
 
-            auto tVertices = vertices * rotateByZ(0.0) * rotateByY(radians) * translate(0.0, 0.0, -200.0);
+        const auto [vertices, triangles] = generatePlane(100.0f, 100.0f, 5, 5);
 
-            const auto [cTriangles, normals] = cull(tVertices, triangles);
+        const auto textureCoodinates = vertices * translate(50.0f, 50.0f, 0.0f);
 
-            tVertices =
-                dehomogenized(tVertices * perspective(1.0, 2000.0, 1.92, 1.0)) * viewport(width - 1, height - 1);
+        LOG_DEBUG(textureCoodinates.rowCount());
 
-            auto frame = Image{width, height};
-            drawTexture(tVertices, cTriangles, textureMapping, texture, frame);
-            frames.push_back(std::move(frame));
-        }
+        const auto textureMapping =
+            TextureMapping{Slicer<0, 0, dynamic, 2>::slice(textureCoodinates, textureCoodinates.rowCount())};
 
-        const auto delayCentiseconds = 3;
-        const auto actual = getGifBinary(frames | map([](auto& f) { return &f; }) | toVector(), delayCentiseconds);
+        const auto rotation = -0.25f * pi<float>;
 
-        auto match = actual == readBinaryFile("resources/dansandu/chocolate/expected_textured_cuboid.gif");
-        if (!match)
-        {
-            writeBinaryFile("target/actual_textured_cuboid.gif", actual);
-            FAIL("textured cuboid animation is not a match");
-        }
-        else
-        {
-            SUCCEED("textured cuboid animation is a match");
-        }
-    }*/
+        const auto transform = rotateByX(rotation) * translate(0.0, 0.0, -80.0) * perspective(1.0, 2000.0, 1.92, 1.0);
+
+        const auto tVertices = dehomogenized(vertices * transform) * viewport(width - 1, height - 1);
+
+        auto image = Image{width, height, Colors::davysGrey};
+
+        drawTexture(tVertices, triangles, textureMapping, texture, image);
+
+        REQUIRE_IMAGE(image, "perspective_texture.bmp");
+    }
 }

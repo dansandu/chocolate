@@ -70,8 +70,6 @@ void drawTexture(const ConstantVerticesView vertices, const ConstantTrianglesVie
 
     const auto getTextureMapping = [&](const int t, const int v) { return sliceRow(textureMapping, triangles(t, v)); };
 
-    auto tape = std::vector<float>{};
-
     for (auto t = 0; t < triangles.rowCount(); ++t)
     {
         const auto a = getVertex(t, 0);
@@ -91,10 +89,6 @@ void drawTexture(const ConstantVerticesView vertices, const ConstantTrianglesVie
             const auto tx = std::min(texture.width() - 1, std::max(0, td.x()));
             const auto ty = std::min(texture.height() - 1, std::max(0, td.y()));
             image(vertex.x(), vertex.y()) = texture(tx, ty);
-
-            tape.push_back(u);
-            tape.push_back(v);
-            tape.push_back(w);
         };
 
         drawTriangle(a, b, c, shader, false);
