@@ -10,7 +10,7 @@
 #include "dansandu/chocolate/geometry/cuboid.hpp"
 #include "dansandu/chocolate/geometry/plane.hpp"
 #include "dansandu/chocolate/geometry/sphere.hpp"
-#include "dansandu/chocolate/transform.hpp"
+#include "dansandu/chocolate/transformation.hpp"
 #include "dansandu/math/common.hpp"
 
 using dansandu::ballotin::file_system::readBinaryFile;
@@ -39,7 +39,7 @@ using dansandu::math::common::pi;
 using dansandu::math::matrix::normalized;
 using dansandu::math::matrix::Slicer;
 
-using namespace dansandu::chocolate::transform;
+using namespace dansandu::chocolate::transformation;
 
 static void REQUIRE_IMAGE(const Image& actualImage, const std::string& fileName)
 {
@@ -87,7 +87,7 @@ TEST_CASE("drawing")
 
             mesh = clip(std::get<0>(mesh) * perspective(1.0, 2000.0, 1.92, 1.0), std::get<1>(mesh), std::get<2>(mesh));
 
-            std::get<0>(mesh) = dehomogenized(std::get<0>(mesh)) * viewport(width - 1, height - 1);
+            std::get<0>(mesh) = dehomogenized(std::get<0>(mesh)) * viewport(width, height);
 
             auto frame = Image{width, height};
             drawFlat(std::get<0>(mesh), std::get<1>(mesh), std::get<2>(mesh), Colors::black, Colors::magenta,
@@ -163,7 +163,7 @@ TEST_CASE("drawing")
 
         const auto transform = rotateByX(rotation) * translate(0.0, 0.0, -80.0) * perspective(1.0, 2000.0, 1.92, 1.0);
 
-        const auto tVertices = dehomogenized(vertices * transform) * viewport(width - 1, height - 1);
+        const auto tVertices = dehomogenized(vertices * transform) * viewport(width, height);
 
         auto image = Image{width, height, Colors::davysGrey};
 

@@ -27,6 +27,8 @@ using Normals = dansandu::math::matrix::Matrix<float, dynamic, 3>;
 
 using TextureMapping = dansandu::math::matrix::Matrix<float, dynamic, 2>;
 
+using ConstantMatrix4View = dansandu::math::matrix::ConstantMatrixView<float, 4, 4>;
+
 using ConstantVector3View = dansandu::math::matrix::ConstantMatrixView<float, 1, 3>;
 
 using ConstantVerticesView = dansandu::math::matrix::ConstantMatrixView<float, dynamic, 4>;

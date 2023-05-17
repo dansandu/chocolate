@@ -1,4 +1,4 @@
-#include "dansandu/chocolate/transform.hpp"
+#include "dansandu/chocolate/transformation.hpp"
 #include "dansandu/math/common.hpp"
 
 using dansandu::math::common::close;
@@ -6,7 +6,7 @@ using dansandu::math::matrix::crossProduct;
 using dansandu::math::matrix::dotProduct;
 using dansandu::math::matrix::normalized;
 
-namespace dansandu::chocolate::transform
+namespace dansandu::chocolate::transformation
 {
 
 Matrix4 shearX(const float y, const float z)
@@ -108,8 +108,8 @@ Matrix4 perspective(const float near, const float far, const float fieldOfViewRa
 
 Matrix4 viewport(const float width, const float height)
 {
-    const auto x = width / 2.0f;
-    const auto y = height / 2.0f;
+    const auto x = (width - 1.0f) / 2.0f;
+    const auto y = (height - 1.0f) / 2.0f;
     return scale(x, -y, 1.0f) * translate(x, y, -1.0f);
 }
 

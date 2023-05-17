@@ -1,4 +1,4 @@
-#include "dansandu/chocolate/transform.hpp"
+#include "dansandu/chocolate/transformation.hpp"
 #include "catchorg/catch/catch.hpp"
 
 using dansandu::chocolate::Matrix4;
@@ -7,7 +7,7 @@ using dansandu::chocolate::Vertices;
 using dansandu::math::common::pi;
 using dansandu::math::matrix::close;
 
-using namespace dansandu::chocolate::transform;
+using namespace dansandu::chocolate::transformation;
 
 TEST_CASE("transform")
 {
@@ -142,10 +142,10 @@ TEST_CASE("transform")
         const auto actual = viewport(width, height);
 
         // clang-format off
-        const auto expected = Matrix4{{{300.0f,    0.0f,  0.0f,  0.0f},
-                                       {  0.0f, -200.0f,  0.0f,  0.0f},
+        const auto expected = Matrix4{{{299.5f,    0.0f,  0.0f,  0.0f},
+                                       {  0.0f, -199.5f,  0.0f,  0.0f},
                                        {  0.0f,    0.0f,  1.0f,  0.0f},
-                                       {300.0f,  200.0f, -1.0f,  1.0f}}};
+                                       {299.5f,  199.5f, -1.0f,  1.0f}}};
         // clang-format on
 
         REQUIRE(close(actual, expected, epsilon));

@@ -8,7 +8,7 @@
 #include "dansandu/chocolate/geometry/plane.hpp"
 #include "dansandu/chocolate/geometry/surface.hpp"
 #include "dansandu/chocolate/raster/drawing.hpp"
-#include "dansandu/chocolate/transform.hpp"
+#include "dansandu/chocolate/transformation.hpp"
 #include "dansandu/math/common.hpp"
 #include "dansandu/math/matrix.hpp"
 
@@ -28,7 +28,7 @@ using dansandu::chocolate::raster::drawing::drawWireframe;
 using dansandu::math::common::pi;
 using dansandu::math::matrix::close;
 
-using namespace dansandu::chocolate::transform;
+using namespace dansandu::chocolate::transformation;
 
 TEST_CASE("clipping")
 {
@@ -110,7 +110,7 @@ TEST_CASE("clipping")
 
             mesh = clip(std::get<0>(mesh) * perspective(1.0, 2000.0, 1.92, 1.0), std::get<1>(mesh), std::get<2>(mesh));
 
-            std::get<0>(mesh) = dehomogenized(std::get<0>(mesh)) * viewport(width - 1, height - 1);
+            std::get<0>(mesh) = dehomogenized(std::get<0>(mesh)) * viewport(width, height);
 
             auto frame = Image{width, height};
             drawWireframe(std::get<0>(mesh), std::get<1>(mesh), Colors::turquoise, frame);
