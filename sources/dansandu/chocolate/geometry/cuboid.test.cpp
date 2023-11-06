@@ -13,6 +13,7 @@ using dansandu::ballotin::file_system::writeBinaryFile;
 using dansandu::canvas::color::Colors;
 using dansandu::canvas::gif::getGifBinary;
 using dansandu::canvas::image::Image;
+using dansandu::chocolate::transposed;
 using dansandu::chocolate::geometry::cuboid::generateCuboid;
 using dansandu::chocolate::raster::drawing::drawWireframe;
 using dansandu::math::common::pi;
@@ -32,10 +33,10 @@ TEST_CASE("cuboid")
     {
         const auto radians = i * 1.0f * pi<float> / (frameCount - 1);
         const auto transformation =
-            rotateByY(radians) * translate(0.0, 0.0, -200.0) * perspective(1.0, 2000.0, 1.92, 1.0);
+            transposed(perspective(1.0, 2000.0, 1.92, 1.0) * translate(0.0, 0.0, -200.0) * rotateByY(radians));
 
         auto tVertices = vertices * transformation;
-        tVertices = dehomogenized(tVertices) * viewport(width, height);
+        tVertices = dehomogenized(tVertices) * transposed(viewport(width, height));
 
         auto frame = Image{width, height};
         drawWireframe(tVertices, triangles, Colors::magenta, frame);

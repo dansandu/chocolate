@@ -18,9 +18,9 @@ TEST_CASE("transform")
         const auto actual = shearX(3.0f, 7.0f);
 
         // clang-format off
-        const auto expected = Matrix4{{{1.0f, 0.0f, 0.0f, 0.0f},
-                                       {3.0f, 1.0f, 0.0f, 0.0f},
-                                       {7.0f, 0.0f, 1.0f, 0.0f},
+        const auto expected = Matrix4{{{1.0f, 3.0f, 7.0f, 0.0f},
+                                       {0.0f, 1.0f, 0.0f, 0.0f},
+                                       {0.0f, 0.0f, 1.0f, 0.0f},
                                        {0.0f, 0.0f, 0.0f, 1.0f}}};
         // clang-format on
 
@@ -46,10 +46,10 @@ TEST_CASE("transform")
         const auto actual = translate(7.0f, 11.0f, 13.0f);
 
         // clang-format off
-        const auto expected = Matrix4{{{1.0f,  0.0f,  0.0f,  0.0f},
-                                       {0.0f,  1.0f,  0.0f,  0.0f},
-                                       {0.0f,  0.0f,  1.0f,  0.0f}, 
-                                       {7.0f, 11.0f, 13.0f,  1.0f}}};
+        const auto expected = Matrix4{{{1.0f, 0.0f, 0.0f,  7.0f},
+                                       {0.0f, 1.0f, 0.0f, 11.0f},
+                                       {0.0f, 0.0f, 1.0f, 13.0f}, 
+                                       {0.0f, 0.0f, 0.0f,  1.0f}}};
         // clang-format on
 
         REQUIRE(close(actual, expected, epsilon));
@@ -60,10 +60,10 @@ TEST_CASE("transform")
         const auto actual = rotateByX(pi<float> / 2.0f);
 
         // clang-format off
-        const auto expected = Matrix4{{{1.0f,  0.0f, 0.0f, 0.0f},
-                                       {0.0f,  0.0f, 1.0f, 0.0f},
-                                       {0.0f, -1.0f, 0.0f, 0.0f},
-                                       {0.0f,  0.0f, 0.0f, 1.0f}}};
+        const auto expected = Matrix4{{{1.0f, 0.0f,  0.0f, 0.0f},
+                                       {0.0f, 0.0f, -1.0f, 0.0f},
+                                       {0.0f, 1.0f,  0.0f, 0.0f},
+                                       {0.0f, 0.0f,  0.0f, 1.0f}}};
         // clang-format on
 
         REQUIRE(close(actual, expected, epsilon));
@@ -74,10 +74,10 @@ TEST_CASE("transform")
         const auto actual = rotateByY(pi<float> / 2.0f);
 
         // clang-format off
-        const auto expected = Matrix4{{{0.0f, 0.0f, -1.0f, 0.0f}, 
-                                       {0.0f, 1.0f,  0.0f, 0.0f},
-                                       {1.0f, 0.0f,  0.0f, 0.0f},
-                                       {0.0f, 0.0f,  0.0f, 1.0f}}};
+        const auto expected = Matrix4{{{ 0.0f, 0.0f, 1.0f, 0.0f}, 
+                                       { 0.0f, 1.0f, 0.0f, 0.0f},
+                                       {-1.0f, 0.0f, 0.0f, 0.0f},
+                                       { 0.0f, 0.0f, 0.0f, 1.0f}}};
         // clang-format on
 
         REQUIRE(close(actual, expected, epsilon));
@@ -88,10 +88,10 @@ TEST_CASE("transform")
         const auto actual = rotateByZ(pi<float> / 2.0f);
 
         // clang-format off
-        const auto expected = Matrix4{{{ 0.0f, 1.0f, 0.0f, 0.0f},
-                                       {-1.0f, 0.0f, 0.0f, 0.0f},
-                                       { 0.0f, 0.0f, 1.0f, 0.0f},
-                                       { 0.0f, 0.0f, 0.0f, 1.0f}}};
+        const auto expected = Matrix4{{{0.0f, -1.0f, 0.0f, 0.0f},
+                                       {1.0f,  0.0f, 0.0f, 0.0f},
+                                       {0.0f,  0.0f, 1.0f, 0.0f},
+                                       {0.0f,  0.0f, 0.0f, 1.0f}}};
         // clang-format on 
 
         REQUIRE(close(actual, expected, epsilon));
@@ -106,10 +106,10 @@ TEST_CASE("transform")
         const auto actual = lookAt(eye, target, up);
 
         // clang-format off
-        const auto expected = Matrix4{{{-0.9996640f,  0.000129264f,  0.02592610f, 0.0f},
-                                       { 0.0000000f,  0.999988000f, -0.00498579f, 0.0f},
-                                       {-0.0259264f, -0.004984120f, -0.99965100f, 0.0f},
-                                       { 1.8697000f, -0.025179100f, -5.05011000f, 1.0f}}};
+        const auto expected = Matrix4{{{-0.999664000f,  0.00000000f, -0.02592640f,  1.8697000f},
+                                       { 0.000129264f,  0.99998800f, -0.00498412f, -0.0251791f},
+                                       { 0.025926100f, -0.00498579f, -0.99965100f, -5.0501100f},
+                                       { 0.000000000f,  0.00000000f,  0.00000000f,  1.0000000f}}};
         // clang-format on
 
         REQUIRE(close(actual, expected, epsilon));
@@ -127,8 +127,8 @@ TEST_CASE("transform")
         // clang-format off
         const auto expected = Matrix4{{{0.7f,  0.00f,  0.0f,  0.0f},
                                        {0.0f,  1.05f,  0.0f,  0.0f},
-                                       {0.0f,  0.00f, -1.0f, -1.0f},
-                                       {0.0f,  0.00f, -2.0f,  0.0f}}};
+                                       {0.0f,  0.00f, -1.0f, -2.0f},
+                                       {0.0f,  0.00f, -1.0f,  0.0f}}};
         // clang-format on
 
         REQUIRE(close(actual, expected, 1.0e-2f));
@@ -142,10 +142,10 @@ TEST_CASE("transform")
         const auto actual = viewport(width, height);
 
         // clang-format off
-        const auto expected = Matrix4{{{299.5f,    0.0f,  0.0f,  0.0f},
-                                       {  0.0f, -199.5f,  0.0f,  0.0f},
-                                       {  0.0f,    0.0f,  1.0f,  0.0f},
-                                       {299.5f,  199.5f, -1.0f,  1.0f}}};
+        const auto expected = Matrix4{{{299.5f,    0.0f,  0.0f, 299.5f},
+                                       {  0.0f, -199.5f,  0.0f, 199.5f},
+                                       {  0.0f,    0.0f,  1.0f,  -1.0f},
+                                       {  0.0f,    0.0f,  0.0f,   1.0f}}};
         // clang-format on
 
         REQUIRE(close(actual, expected, epsilon));

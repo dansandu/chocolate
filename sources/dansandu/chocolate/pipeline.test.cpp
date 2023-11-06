@@ -36,7 +36,7 @@ TEST_CASE("pipeline")
         {
             const auto rotation = i * 1.0f * pi<float> / (frameCount - 1);
             const auto transformation =
-                rotateByX(0.5f * pi<float>) * rotateByY(rotation) * translate(0.0f, -20.0f, -100.0f);
+                translate(0.0f, -20.0f, -100.0f) * rotateByY(rotation) * rotateByX(0.5f * pi<float>);
 
             auto image = Image{width, height};
             pipeline.renderWireframe(vertices, triangles, transformation, Colors::magenta, image);

@@ -24,6 +24,7 @@ using dansandu::canvas::image::Image;
 using dansandu::chocolate::dynamic;
 using dansandu::chocolate::Normals;
 using dansandu::chocolate::TextureMapping;
+using dansandu::chocolate::transposed;
 using dansandu::chocolate::Triangles;
 using dansandu::chocolate::Vector3;
 using dansandu::chocolate::Vertices;
@@ -75,13 +76,13 @@ TEST_CASE("drawing")
         for (auto i = 0; i < frameCount; ++i)
         {
             const auto rotation = i * 0.22f * pi<float> / (frameCount - 1);
-            const auto transform = rotateByY(rotation) * translate(0.0, 0.0, -250.0);
+            const auto transform = transposed(translate(0.0, 0.0, -250.0) * rotateByY(rotation));
 
             auto mesh = std::make_tuple(vertices * transform, triangles, Normals{});
 
             auto [culledTriangles, normals] = cull(std::get<0>(mesh), triangles);
 
-            std::get<0>(mesh) = std::get<0>(mesh) * perspective(1.0, 2000.0, 1.92, 1.0);
+            std::get<0>(mesh) = std::get<0>(mesh) * transposed(perspective(1.0, 2000.0, 1.92, 1.0));
 
             std::get<1>(mesh) = std::move(culledTriangles);
 
@@ -89,7 +90,7 @@ TEST_CASE("drawing")
 
             mesh = clip(std::get<0>(mesh), std::get<1>(mesh), std::get<2>(mesh));
 
-            std::get<0>(mesh) = dehomogenized(std::get<0>(mesh)) * viewport(width, height);
+            std::get<0>(mesh) = dehomogenized(std::get<0>(mesh)) * transposed(viewport(width, height));
 
             auto frame = Image{width, height};
             drawFlat(std::get<0>(mesh), std::get<1>(mesh), std::get<2>(mesh), Colors::black, Colors::magenta,
@@ -134,12 +135,13 @@ TEST_CASE("drawing")
 
         const auto [vertices, triangles] = generatePlane(100.0f, 100.0f, 5, 5);
 
-        const auto textureCoodinates = vertices * translate(50.0f, 50.0f, 0.0f);
+        const auto textureCoodinates = vertices * transposed(translate(50.0f, 50.0f, 0.0f));
 
         const auto textureMapping =
             TextureMapping{Slicer<0, 0, dynamic, 2>::slice(textureCoodinates, textureCoodinates.rowCount())};
 
-        const auto tVertices = vertices * shearX(0.5, 0.0) * scale(1.0, -1.0, 1.0) * translate(100.0f, 100.0f, 10.0f);
+        const auto tVertices =
+            vertices * transposed(translate(100.0f, 100.0f, 10.0f) * scale(1.0, -1.0, 1.0) * shearX(0.5, 0.0));
 
         auto image = Image{200, 200, Colors::davysGrey};
         drawTexture(tVertices, triangles, textureMapping, texture, image);
@@ -156,18 +158,19 @@ TEST_CASE("drawing")
 
         const auto [vertices, triangles] = generatePlane(100.0f, 100.0f, 5, 5);
 
-        const auto textureCoodinates = vertices * translate(50.0f, 50.0f, 0.0f);
+        const auto textureCoodinates = vertices * transposed(translate(50.0f, 50.0f, 0.0f));
 
         const auto textureMapping =
             TextureMapping{Slicer<0, 0, dynamic, 2>::slice(textureCoodinates, textureCoodinates.rowCount())};
 
         const auto rotation = -0.25f * pi<float>;
 
-        const auto transform = rotateByX(rotation) * translate(0.0, 0.0, -80.0) * perspective(1.0, 2000.0, 1.92, 1.0);
+        const auto transform =
+            transposed(perspective(1.0, 2000.0, 1.92, 1.0) * translate(0.0, 0.0, -80.0) * rotateByX(rotation));
 
         auto tVertices = vertices * transform;
 
-        tVertices = dehomogenized(tVertices) * viewport(width, height);
+        tVertices = dehomogenized(tVertices) * transposed(viewport(width, height));
 
         auto image = Image{width, height, Colors::davysGrey};
 

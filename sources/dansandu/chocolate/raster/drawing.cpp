@@ -9,8 +9,6 @@ using dansandu::canvas::color::Color;
 using dansandu::canvas::image::Image;
 using dansandu::chocolate::raster::triangle::drawTriangle;
 using dansandu::math::matrix::dotProduct;
-using dansandu::math::matrix::magnitude;
-using dansandu::math::matrix::normalized;
 using dansandu::math::matrix::Slicer;
 
 namespace dansandu::chocolate::raster::drawing

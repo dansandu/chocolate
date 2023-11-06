@@ -9,6 +9,8 @@ namespace dansandu::chocolate
 
 using dansandu::math::matrix::dynamic;
 
+using dansandu::math::matrix::transposed;
+
 using ConstantPoint2View = dansandu::math::matrix::ConstantMatrixView<int, 1, 2>;
 
 using Point2 = dansandu::math::matrix::Matrix<int, 1, 2>;

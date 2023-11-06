@@ -24,8 +24,8 @@ static constexpr auto defaultPerspectiveAspect = 1.0f;
 Pipeline::Pipeline()
     : cull_{false},
       clip_{false},
-      projection_{perspective(defaultPerspectiveNear, defaultPerspectiveFar, defaultPerspectiveFieldOfView,
-                              defaultPerspectiveAspect)}
+      projection_{transposed(perspective(defaultPerspectiveNear, defaultPerspectiveFar, defaultPerspectiveFieldOfView,
+                                         defaultPerspectiveAspect))}
 {
 }
 
@@ -44,14 +44,14 @@ Pipeline& Pipeline::clipping(const bool enabled)
 Pipeline& Pipeline::perspectiveProjection(const float near, const float far, const float fieldOfViewRadians,
                                           const float aspect)
 {
-    projection_ = perspective(near, far, fieldOfViewRadians, aspect);
+    projection_ = transposed(perspective(near, far, fieldOfViewRadians, aspect));
     return *this;
 }
 
 void Pipeline::renderWireframe(const ConstantVerticesView vertices, const ConstantTrianglesView triangles,
                                const ConstantMatrix4View& transformation, const Color color, Image& image) const
 {
-    auto tVertices = vertices * transformation;
+    auto tVertices = vertices * transposed(transformation);
     auto tTriangles = Triangles{triangles};
     auto normals = Normals{};
 
@@ -71,7 +71,7 @@ void Pipeline::renderWireframe(const ConstantVerticesView vertices, const Consta
         tTriangles = std::move(std::get<1>(result));
     }
 
-    tVertices = dehomogenized(tVertices) * viewport(image.width(), image.height());
+    tVertices = dehomogenized(tVertices) * transposed(viewport(image.width(), image.height()));
 
     drawWireframe(tVertices, tTriangles, color, image);
 }
