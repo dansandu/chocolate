@@ -2,7 +2,7 @@
 
 #include "dansandu/chocolate/common.hpp"
 
-namespace dansandu::chocolate::transform
+namespace dansandu::chocolate::transformation
 {
 
 Matrix4 shearX(const float y, const float z);

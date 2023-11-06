@@ -8,7 +8,7 @@
 #include "dansandu/chocolate/geometry/plane.hpp"
 #include "dansandu/chocolate/geometry/surface.hpp"
 #include "dansandu/chocolate/raster/drawing.hpp"
-#include "dansandu/chocolate/transform.hpp"
+#include "dansandu/chocolate/transformation.hpp"
 #include "dansandu/math/common.hpp"
 #include "dansandu/math/matrix.hpp"
 
@@ -18,6 +18,7 @@ using dansandu::canvas::color::Colors;
 using dansandu::canvas::gif::getGifBinary;
 using dansandu::canvas::image::Image;
 using dansandu::chocolate::Normals;
+using dansandu::chocolate::transposed;
 using dansandu::chocolate::Triangles;
 using dansandu::chocolate::Vertices;
 using dansandu::chocolate::geometry::clipping::clip;
@@ -28,7 +29,7 @@ using dansandu::chocolate::raster::drawing::drawWireframe;
 using dansandu::math::common::pi;
 using dansandu::math::matrix::close;
 
-using namespace dansandu::chocolate::transform;
+using namespace dansandu::chocolate::transformation;
 
 TEST_CASE("clipping")
 {
@@ -100,17 +101,18 @@ TEST_CASE("clipping")
         for (auto i = 0; i < frameCount; ++i)
         {
             const auto rotation = i * 0.70f * pi<float> / (frameCount - 1);
-            const auto transform = rotateByX(-rotation) * translate(0.0, 100.0, -500.0);
+            const auto transform = transposed(translate(0.0, 100.0, -500.0) * rotateByX(-rotation));
 
             auto mesh = std::make_tuple(vertices * transform, triangles, Normals{});
 
             auto [culledTriangles, normals] = cull(std::get<0>(mesh), triangles);
+            std::get<0>(mesh) = std::get<0>(mesh) * transposed(perspective(1.0, 2000.0, 1.92, 1.0));
             std::get<1>(mesh) = std::move(culledTriangles);
             std::get<2>(mesh) = std::move(normals);
 
-            mesh = clip(std::get<0>(mesh) * perspective(1.0, 2000.0, 1.92, 1.0), std::get<1>(mesh), std::get<2>(mesh));
+            mesh = clip(std::get<0>(mesh), std::get<1>(mesh), std::get<2>(mesh));
 
-            std::get<0>(mesh) = dehomogenized(std::get<0>(mesh)) * viewport(width - 1, height - 1);
+            std::get<0>(mesh) = dehomogenized(std::get<0>(mesh)) * transposed(viewport(width, height));
 
             auto frame = Image{width, height};
             drawWireframe(std::get<0>(mesh), std::get<1>(mesh), Colors::turquoise, frame);

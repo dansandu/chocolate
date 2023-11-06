@@ -9,8 +9,6 @@ using dansandu::canvas::color::Color;
 using dansandu::canvas::image::Image;
 using dansandu::chocolate::raster::triangle::drawTriangle;
 using dansandu::math::matrix::dotProduct;
-using dansandu::math::matrix::magnitude;
-using dansandu::math::matrix::normalized;
 using dansandu::math::matrix::Slicer;
 
 namespace dansandu::chocolate::raster::drawing
@@ -35,7 +33,8 @@ void drawFlat(const ConstantVerticesView vertices, const ConstantTrianglesView t
 
         const auto normal = getNormal(t);
         const auto gamma = std::max(0.0f, dotProduct(-diffuseDirection, normal));
-        const auto color = toColor(objectColorVec + diffuseColorVec * gamma);
+        const auto colorVec = objectColorVec + diffuseColorVec * gamma;
+        const auto color = toColor(colorVec);
 
         const auto shader = [&](const auto vertex, const auto, const auto, const auto)
         { image(vertex.x(), vertex.y()) = color; };

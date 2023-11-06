@@ -5,7 +5,7 @@
 #include "dansandu/canvas/gif.hpp"
 #include "dansandu/canvas/image.hpp"
 #include "dansandu/chocolate/raster/drawing.hpp"
-#include "dansandu/chocolate/transform.hpp"
+#include "dansandu/chocolate/transformation.hpp"
 #include "dansandu/math/common.hpp"
 
 using dansandu::ballotin::file_system::readBinaryFile;
@@ -13,11 +13,12 @@ using dansandu::ballotin::file_system::writeBinaryFile;
 using dansandu::canvas::color::Colors;
 using dansandu::canvas::gif::getGifBinary;
 using dansandu::canvas::image::Image;
+using dansandu::chocolate::transposed;
 using dansandu::chocolate::geometry::sphere::generateSphere;
 using dansandu::chocolate::raster::drawing::drawWireframe;
 using dansandu::math::common::pi;
 
-using namespace dansandu::chocolate::transform;
+using namespace dansandu::chocolate::transformation;
 
 TEST_CASE("sphere")
 {
@@ -31,9 +32,11 @@ TEST_CASE("sphere")
     for (auto i = 0; i < frameCount; ++i)
     {
         const auto radians = i * 0.125f * pi<float> / (frameCount - 1);
-        const auto tVertices = dehomogenized(vertices * rotateByY(radians) * translate(0.0, 0.0, -200.0) *
-                                             perspective(1.0, 2000.0, 1.92, 1.0)) *
-                               viewport(width - 1, height - 1);
+        const auto transformation =
+            transposed(perspective(1.0, 2000.0, 1.92, 1.0) * translate(0.0, 0.0, -200.0) * rotateByY(radians));
+
+        auto tVertices = vertices * transformation;
+        tVertices = dehomogenized(tVertices) * transposed(viewport(width, height));
 
         auto frame = Image{width, height};
         drawWireframe(tVertices, triangles, Colors::magenta, frame);

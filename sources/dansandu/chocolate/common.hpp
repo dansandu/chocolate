@@ -9,6 +9,8 @@ namespace dansandu::chocolate
 
 using dansandu::math::matrix::dynamic;
 
+using dansandu::math::matrix::transposed;
+
 using ConstantPoint2View = dansandu::math::matrix::ConstantMatrixView<int, 1, 2>;
 
 using Point2 = dansandu::math::matrix::Matrix<int, 1, 2>;
@@ -26,6 +28,8 @@ using Triangles = dansandu::math::matrix::Matrix<int, dynamic, 3>;
 using Normals = dansandu::math::matrix::Matrix<float, dynamic, 3>;
 
 using TextureMapping = dansandu::math::matrix::Matrix<float, dynamic, 2>;
+
+using ConstantMatrix4View = dansandu::math::matrix::ConstantMatrixView<float, 4, 4>;
 
 using ConstantVector3View = dansandu::math::matrix::ConstantMatrixView<float, 1, 3>;
 
