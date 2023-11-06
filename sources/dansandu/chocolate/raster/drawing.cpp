@@ -35,7 +35,8 @@ void drawFlat(const ConstantVerticesView vertices, const ConstantTrianglesView t
 
         const auto normal = getNormal(t);
         const auto gamma = std::max(0.0f, dotProduct(-diffuseDirection, normal));
-        const auto color = toColor(objectColorVec + diffuseColorVec * gamma);
+        const auto colorVec = objectColorVec + diffuseColorVec * gamma;
+        const auto color = toColor(colorVec);
 
         const auto shader = [&](const auto vertex, const auto, const auto, const auto)
         { image(vertex.x(), vertex.y()) = color; };

@@ -31,9 +31,11 @@ TEST_CASE("cuboid")
     for (auto i = 0; i < frameCount; ++i)
     {
         const auto radians = i * 1.0f * pi<float> / (frameCount - 1);
-        const auto tVertices = dehomogenized(vertices * rotateByY(radians) * translate(0.0, 0.0, -200.0) *
-                                             perspective(1.0, 2000.0, 1.92, 1.0)) *
-                               viewport(width, height);
+        const auto transformation =
+            rotateByY(radians) * translate(0.0, 0.0, -200.0) * perspective(1.0, 2000.0, 1.92, 1.0);
+
+        auto tVertices = vertices * transformation;
+        tVertices = dehomogenized(tVertices) * viewport(width, height);
 
         auto frame = Image{width, height};
         drawWireframe(tVertices, triangles, Colors::magenta, frame);

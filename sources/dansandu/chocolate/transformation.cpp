@@ -85,11 +85,12 @@ Matrix4 lookAt(const ConstantVector3View eye, const ConstantVector3View target, 
     const auto w = normalized(eye - target);
     const auto u = normalized(crossProduct(up, w));
     const auto v = crossProduct(w, u);
+    const auto offset = -eye;
     // clang-format off
-    return translate(-eye) * Matrix4{{{u.x(), v.x(), w.x(), 0.0f},
-                                      {u.y(), v.y(), w.y(), 0.0f},
-                                      {u.z(), v.z(), w.z(), 0.0f},
-                                      { 0.0f,  0.0f,  0.0f, 1.0f}}};
+    return translate(offset) * Matrix4{{{u.x(), v.x(), w.x(), 0.0f},
+                                        {u.y(), v.y(), w.y(), 0.0f},
+                                        {u.z(), v.z(), w.z(), 0.0f},
+                                        { 0.0f,  0.0f,  0.0f, 1.0f}}};
     // clang-format on
 }
 

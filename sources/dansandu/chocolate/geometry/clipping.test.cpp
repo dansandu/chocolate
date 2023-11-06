@@ -105,10 +105,11 @@ TEST_CASE("clipping")
             auto mesh = std::make_tuple(vertices * transform, triangles, Normals{});
 
             auto [culledTriangles, normals] = cull(std::get<0>(mesh), triangles);
+            std::get<0>(mesh) = std::get<0>(mesh) * perspective(1.0, 2000.0, 1.92, 1.0);
             std::get<1>(mesh) = std::move(culledTriangles);
             std::get<2>(mesh) = std::move(normals);
 
-            mesh = clip(std::get<0>(mesh) * perspective(1.0, 2000.0, 1.92, 1.0), std::get<1>(mesh), std::get<2>(mesh));
+            mesh = clip(std::get<0>(mesh), std::get<1>(mesh), std::get<2>(mesh));
 
             std::get<0>(mesh) = dehomogenized(std::get<0>(mesh)) * viewport(width, height);
 

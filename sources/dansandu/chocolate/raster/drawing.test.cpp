@@ -81,11 +81,13 @@ TEST_CASE("drawing")
 
             auto [culledTriangles, normals] = cull(std::get<0>(mesh), triangles);
 
+            std::get<0>(mesh) = std::get<0>(mesh) * perspective(1.0, 2000.0, 1.92, 1.0);
+
             std::get<1>(mesh) = std::move(culledTriangles);
 
             std::get<2>(mesh) = std::move(normals);
 
-            mesh = clip(std::get<0>(mesh) * perspective(1.0, 2000.0, 1.92, 1.0), std::get<1>(mesh), std::get<2>(mesh));
+            mesh = clip(std::get<0>(mesh), std::get<1>(mesh), std::get<2>(mesh));
 
             std::get<0>(mesh) = dehomogenized(std::get<0>(mesh)) * viewport(width, height);
 
@@ -163,7 +165,9 @@ TEST_CASE("drawing")
 
         const auto transform = rotateByX(rotation) * translate(0.0, 0.0, -80.0) * perspective(1.0, 2000.0, 1.92, 1.0);
 
-        const auto tVertices = dehomogenized(vertices * transform) * viewport(width, height);
+        auto tVertices = vertices * transform;
+
+        tVertices = dehomogenized(tVertices) * viewport(width, height);
 
         auto image = Image{width, height, Colors::davysGrey};
 
