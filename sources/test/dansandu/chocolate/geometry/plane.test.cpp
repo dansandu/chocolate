@@ -18,12 +18,14 @@ TEST_CASE("plane")
     const auto heightResolution = 2;
     const auto [vertices, triangles] = generatePlane(width, height, widthResolution, heightResolution);
 
+    // clang-format off
     const auto expectedVertices = Vertices{{{-50.0, -25.0, 0.0, 1.0},
-                                            {0.0, -25.0, 0.0, 1.0},
-                                            {50.0, -25.0, 0.0, 1.0},
-                                            {-50.0, 25.0, 0.0, 1.0},
-                                            {0.0, 25.0, 0.0, 1.0},
-                                            {50.0, 25.0, 0.0, 1.0}}};
+                                            {  0.0, -25.0, 0.0, 1.0},
+                                            { 50.0, -25.0, 0.0, 1.0},
+                                            {-50.0,  25.0, 0.0, 1.0},
+                                            {  0.0,  25.0, 0.0, 1.0},
+                                            { 50.0,  25.0, 0.0, 1.0}}};
+    // clang-format on
 
     const auto expectedTriangles = Triangles{{{0, 1, 4}, {0, 4, 3}, {1, 2, 5}, {1, 5, 4}}};
 

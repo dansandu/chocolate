@@ -12,8 +12,6 @@ using namespace dansandu::chocolate::transformation;
 
 TEST_CASE("transform")
 {
-    const auto epsilon = 1.0e-5;
-
     SECTION("shearX")
     {
         const auto actual = shearX(3.0, 7.0);
