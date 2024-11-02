@@ -1,0 +1,139 @@
+#include "dansandu/chocolate/geometry/clipping.hpp"
+#include "dansandu/ballotin/file_system.hpp"
+#include "dansandu/canvas/color.hpp"
+#include "dansandu/canvas/gif.hpp"
+#include "dansandu/canvas/image.hpp"
+#include "dansandu/chocolate/common.hpp"
+#include "dansandu/chocolate/geometry/plane.hpp"
+#include "dansandu/chocolate/geometry/surface.hpp"
+#include "dansandu/chocolate/raster/drawing.hpp"
+#include "dansandu/chocolate/transformation.hpp"
+#include "dansandu/math/common.hpp"
+#include "dansandu/math/matrix.hpp"
+#include "dansandu/radiance/radiance.hpp"
+
+using dansandu::ballotin::file_system::readBinaryFile;
+using dansandu::ballotin::file_system::writeBinaryFile;
+using dansandu::canvas::color::Colors;
+using dansandu::canvas::gif::getGifBinary;
+using dansandu::canvas::image::Image;
+using dansandu::chocolate::Normals;
+using dansandu::chocolate::transposed;
+using dansandu::chocolate::Triangles;
+using dansandu::chocolate::Vertices;
+using dansandu::chocolate::geometry::clipping::clip;
+using dansandu::chocolate::geometry::clipping::cull;
+using dansandu::chocolate::geometry::plane::generatePlane;
+using dansandu::chocolate::geometry::surface::generateTriangleNormals;
+using dansandu::chocolate::raster::drawing::drawWireframe;
+using dansandu::math::close;
+using dansandu::math::pi;
+using dansandu::radiance::Tolerance;
+
+using namespace dansandu::chocolate::transformation;
+
+TEST_CASE("clipping")
+{
+    SECTION("clip")
+    {
+        const auto vertices = Vertices{{{-12.0, 0.0, 0.0, 2.0}, {0.0, 12.0, 0.0, 3.0}, {12.0, 0.0, 0.0, 4.0}}};
+
+        const auto triangles = Triangles{{0, 1, 2}};
+
+        const auto normals = generateTriangleNormals(vertices, triangles);
+
+        const auto [clippedVertices, clippedTriangles, clippedNormals] = clip(vertices, triangles, normals);
+
+        const auto expectedVertices = Vertices{{{3.27273, 3.27273, 0.0, 3.27273},
+                                                {3.27273, 0.00000, 0.0, 3.27273},
+                                                {-2.76923, 0.00000, 0.0, 2.76923},
+                                                {-2.76923, 2.76923, 0.0, 2.76923}}};
+
+        REQUIRE(clippedVertices == Tolerance(expectedVertices));
+
+        const auto expectedTriangles = Triangles{{{0, 1, 2}, {0, 2, 3}}};
+
+        REQUIRE(clippedTriangles == expectedTriangles);
+
+        const auto expectedNormals = Normals{{{0.0, 0.0, -1.0}, {0.0, 0.0, -1.0}}};
+
+        REQUIRE(clippedNormals == Tolerance(expectedNormals));
+    }
+
+    SECTION("culling")
+    {
+        const auto triangles = Triangles{{0, 1, 2}};
+
+        SECTION("visible")
+        {
+            const auto vertices = Vertices{{{1.0, 0.0, -10.0, 1.0}, {0.0, 1.0, -10.0, 1.0}, {0.0, 0.0, -9.0, 1.0}}};
+
+            const auto [culledTriangles, normals] = cull(vertices, triangles);
+
+            REQUIRE(culledTriangles == triangles);
+
+            const auto expectedNormals = Normals{{{0.57735027, 0.57735027, 0.57735027}}};
+
+            REQUIRE(normals == Tolerance(expectedNormals));
+        }
+
+        SECTION("back-facing")
+        {
+            const auto vertices = Vertices{{{-12.0, 0.0, 0.0, 2.0}, {0.0, 12.0, 0.0, 3.0}, {12.0, 0.0, 0.0, 4.0}}};
+
+            const auto [culledTriangles, normals] = cull(vertices, triangles);
+
+            REQUIRE(culledTriangles == Triangles{});
+        }
+    }
+
+    SECTION("cull and clip")
+    {
+        auto images = std::vector<Image>{};
+
+        const auto [vertices, triangles] = generatePlane(4000.0, 1000.0, 40, 10);
+
+        const auto width = 200;
+        const auto height = 200;
+        const auto frameCount = 400;
+
+        for (auto i = 0; i < frameCount; ++i)
+        {
+            const auto rotation = i * 0.70 * pi<double> / (frameCount - 1);
+            const auto transform = transposed(translate(0.0, 100.0, -500.0) * rotateByX(-rotation));
+
+            auto mesh = std::make_tuple(vertices * transform, triangles, Normals{});
+
+            auto [culledTriangles, normals] = cull(std::get<0>(mesh), triangles);
+            std::get<0>(mesh) = std::get<0>(mesh) * transposed(perspective(1.0, 2000.0, 1.92, 1.0));
+            std::get<1>(mesh) = std::move(culledTriangles);
+            std::get<2>(mesh) = std::move(normals);
+
+            mesh = clip(std::get<0>(mesh), std::get<1>(mesh), std::get<2>(mesh));
+
+            std::get<0>(mesh) = dehomogenized(std::get<0>(mesh)) * transposed(viewport(width, height));
+
+            auto frame = Image{width, height};
+            drawWireframe(std::get<0>(mesh), std::get<1>(mesh), Colors::turquoise, frame);
+            images.push_back(std::move(frame));
+        }
+
+        auto frames = std::vector<const Image*>{};
+        for (const auto& image : images)
+        {
+            frames.push_back(&image);
+        }
+
+        const auto delayCentiseconds = 3;
+        const auto actual = getGifBinary(frames, delayCentiseconds);
+
+        auto clipAndCullMatchesGif =
+            (actual == readBinaryFile("resources/test/dansandu/chocolate/expected_clip_and_cull.gif"));
+        if (!clipAndCullMatchesGif)
+        {
+            writeBinaryFile("target/actual_clip_and_cull.gif", actual);
+        }
+
+        REQUIRE(clipAndCullMatchesGif);
+    }
+}

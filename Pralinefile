@@ -4,14 +4,14 @@ version: 1.0.0
 dependencies:
 - organization: dansandu
   artifact: math
-  version: 1.0.0
+  version: 1.0.0.SNAPSHOT
 - organization: dansandu
   artifact: canvas
-  version: 1.0.0
+  version: 1.0.0.SNAPSHOT
 - organization: dansandu
   artifact: ballotin
   version: 1.0.0.SNAPSHOT
-- organization: catchorg
-  artifact: catch
-  version: 2.+5.+0
+- organization: dansandu
+  artifact: radiance
+  version: 1.0.0.SNAPSHOT
   scope: test
