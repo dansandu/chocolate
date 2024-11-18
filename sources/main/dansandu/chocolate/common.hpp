@@ -17,6 +17,8 @@ using Point2 = dansandu::math::matrix::Matrix<int, 1, 2>;
 
 using Matrix4 = dansandu::math::matrix::Matrix<double, 4, 4>;
 
+using Vector2 = dansandu::math::matrix::Matrix<double, 1, 2>;
+
 using Vector3 = dansandu::math::matrix::Matrix<double, 1, 3>;
 
 using Vector4 = dansandu::math::matrix::Matrix<double, 1, 4>;
@@ -31,6 +33,8 @@ using TextureMapping = dansandu::math::matrix::Matrix<double, dynamic, 2>;
 
 using ConstantMatrix4View = dansandu::math::matrix::ConstantMatrixView<double, 4, 4>;
 
+using ConstantVector2View = dansandu::math::matrix::ConstantMatrixView<double, 1, 2>;
+
 using ConstantVector3View = dansandu::math::matrix::ConstantMatrixView<double, 1, 3>;
 
 using ConstantVerticesView = dansandu::math::matrix::ConstantMatrixView<double, dynamic, 4>;
@@ -40,6 +44,8 @@ using ConstantTrianglesView = dansandu::math::matrix::ConstantMatrixView<int, dy
 using ConstantNormalsView = dansandu::math::matrix::ConstantMatrixView<double, dynamic, 3>;
 
 using ConstantTextureMappingView = dansandu::math::matrix::ConstantMatrixView<double, dynamic, 2>;
+
+using Vector2View = dansandu::math::matrix::MatrixView<double, 1, 2>;
 
 using Vector3Slicer = dansandu::math::matrix::Slicer<dynamic, 0, 1, 3>;
 
@@ -69,6 +75,11 @@ getRounded(const dansandu::math::matrix::MatrixImplementation<T, M, N, S>& matri
         *target++ = static_cast<int>(std::round(*source++));
     }
     return result;
+}
+
+inline bool between(const double x, const double a, const double b)
+{
+    return (a <= x) & (x <= b);
 }
 
 }

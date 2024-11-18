@@ -7,8 +7,9 @@
 using dansandu::radiance::progress_bar_console_reporter::ProgressBarConsoleReporter;
 using dansandu::radiance::test_case_registry::TestCaseRegistry;
 using dansandu::radiance::utility::getEnvironmentVariable;
+using dansandu::radiance::utility::toWideString;
 
-int main(const int, const char* const* const)
+int main(const int argc, const char* const* const argv)
 {
     const auto stageIndexString = getEnvironmentVariable("PRALINE_PROGRESS_BAR_STAGE_INDEX");
     const auto stageIndex = stageIndexString.has_value() ? std::stoi(stageIndexString.value()) : 0;
@@ -18,7 +19,18 @@ int main(const int, const char* const* const)
 
     auto reporter = ProgressBarConsoleReporter{stageIndex, stageCount};
 
-    const auto testSuiteResult = TestCaseRegistry::instance().runAllTestCases(reporter);
+    if (argc > 1)
+    {
+        const auto testCaseName = toWideString(argv[1]);
 
-    return !testSuiteResult.testSuiteSuccess;
+        const auto testSuiteResult = TestCaseRegistry::instance().runTestCase(testCaseName, reporter);
+
+        return !testSuiteResult.testSuiteSuccess;
+    }
+    else
+    {
+        const auto testSuiteResult = TestCaseRegistry::instance().runAllTestCases(reporter);
+
+        return !testSuiteResult.testSuiteSuccess;
+    }
 }
