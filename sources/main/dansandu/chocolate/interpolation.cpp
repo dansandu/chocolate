@@ -161,14 +161,14 @@ Vector4 BilinearInterpolation::operator()(const ConstantVector3View vertex) cons
     const auto t2 = transversal2_.solveParametric(middle2);
     const auto t3 = scanLine.solveParametric(point);
 
-    const auto alpha = (1.0 - t1) * (1.0 - t3);
+    const auto alpha = t1 * (1.0 - t3);
     const auto beta = (1.0 - t2) * t3;
     const auto gamma = t2 * t3;
-    const auto delta = t1 * (1.0 - t3);
+    const auto delta = (1.0 - t1) * (1.0 - t3);
 
     if (shiftPoints_)
     {
-        return Vector4{{delta, alpha, beta, gamma}};
+        return Vector4{{beta, gamma, delta, alpha}};
     }
     else
     {
@@ -181,22 +181,27 @@ std::optional<BilinearInterpolation> canInterpolateBilineary(const ConstantVecto
 {
     const auto slice = [](const auto& vector) { return Slicer<0, 0, 1, 2>::slice(vector); };
 
-    if (isConvexPolygon(slice(a), slice(b), slice(c), slice(d)))
+    const auto sa = slice(a);
+    const auto sb = slice(b);
+    const auto sc = slice(c);
+    const auto sd = slice(d);
+
+    if (isConvexPolygon(sa, sb, sc, sd))
     {
-        const auto ab = Line{slice(a), slice(b)};
-        const auto cd = Line{slice(c), slice(d)};
-        const auto ad = Line{slice(a), slice(d)};
-        const auto bc = Line{slice(b), slice(c)};
+        const auto ab = Line{sa, sb};
+        const auto bc = Line{sb, sc};
+        const auto cd = Line{sc, sd};
+        const auto da = Line{sd, sa};
 
         auto vanishingPoint = Vector2{};
 
         if (ab.intersect(cd, vanishingPoint))
         {
-            return BilinearInterpolation{vanishingPoint, ab, cd, ad, bc, false};
+            return BilinearInterpolation{vanishingPoint, ab, cd, da, bc, false};
         }
-        else if (ad.intersect(bc, vanishingPoint))
+        else if (da.intersect(bc, vanishingPoint))
         {
-            return BilinearInterpolation{vanishingPoint, ad, bc, cd, ab, false};
+            return BilinearInterpolation{vanishingPoint, da, bc, cd, ab, true};
         }
     }
 

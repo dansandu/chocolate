@@ -13,16 +13,45 @@ using dansandu::canvas::color::Colors;
 using dansandu::canvas::image::Image;
 using dansandu::chocolate::between;
 using dansandu::chocolate::checkImage;
+using dansandu::chocolate::ConstantTextureMappingView;
 using dansandu::chocolate::getRounded;
+using dansandu::chocolate::TextureMapping;
 using dansandu::chocolate::Vector2;
 using dansandu::chocolate::Vector3;
 using dansandu::chocolate::interpolation::BarycentricCoordinates;
+using dansandu::chocolate::interpolation::BilinearInterpolation;
 using dansandu::chocolate::interpolation::canInterpolateBilineary;
 using dansandu::chocolate::interpolation::interpolate;
 using dansandu::chocolate::interpolation::isConvexPolygon;
 using dansandu::chocolate::interpolation::Line;
 using dansandu::math::close;
+using dansandu::math::matrix::dynamic;
+using dansandu::math::matrix::Slicer;
 using dansandu::radiance::Tolerance;
+
+static void rasterizeTexture(const Image& texture, const ConstantTextureMappingView textureMapping,
+                             const BilinearInterpolation& interpolation, Image& screen)
+{
+    const auto tex = [&](const int index) { return Slicer<dynamic, 0, 1, 2>::slice(textureMapping, index); };
+
+    for (auto y = 0; y < screen.height(); ++y)
+    {
+        for (auto x = 0; x < screen.width(); ++x)
+        {
+            const auto point = Vector3{{static_cast<double>(x), static_cast<double>(y), 0.0}};
+            const auto coord = interpolation(point);
+
+            if (between(coord(0), 0.0, 1.0) && between(coord(1), 0.0, 1.0) && between(coord(2), 0.0, 1.0) &&
+                between(coord(3), 0.0, 1.0))
+            {
+                const auto textureVertex =
+                    getRounded(coord(0) * tex(0) + coord(1) * tex(1) + coord(2) * tex(2) + coord(3) * tex(3));
+
+                screen(x, y) = texture(textureVertex.x(), textureVertex.y());
+            }
+        }
+    }
+}
 
 TEST_CASE("interpolation")
 {
@@ -217,47 +246,54 @@ TEST_CASE("interpolation")
 
     SECTION("bilinear interpolation")
     {
-        const auto p1 = Vector3{{80.0, 10.0, 0.0}};
-        const auto p2 = Vector3{{10.0, 180.0, 0.0}};
-        const auto p3 = Vector3{{250.0, 140.0, 0.0}};
-        const auto p4 = Vector3{{220.0, 50.0, 0.0}};
-
         const auto texture = readBitmapFile("resources/test/dansandu/chocolate/bilinear_interpolation_texture.bmp");
+        const auto textureWidth = texture.width();
+        const auto textureHeight = texture.height();
 
-        const auto texture1 = Vector3{{0.0, 0.0, 0.0}};
-        const auto texture2 = Vector3{{0.0, 149.0, 0.0}};
-        const auto texture3 = Vector3{{199.0, 149.0, 0.0}};
-        const auto texture4 = Vector3{{199.0, 0.0, 0.0}};
+        // clang-format off
+        const auto textureMapping = TextureMapping{{
+            {0.0,                0.0,               },
+            {0.0,                textureHeight - 1.0},
+            {textureWidth - 1.0, textureHeight - 1.0},
+            {textureWidth - 1.0, 0.0,               },
+        }};
+        // clang-format on
 
-        const auto interpolation = canInterpolateBilineary(p1, p2, p3, p4);
+        const auto screenWidth = 300;
+        const auto screenHeight = 200;
 
-        REQUIRE(interpolation.has_value());
+        auto screen = Image{screenWidth, screenHeight};
 
-        const auto width = 300;
-        const auto height = 200;
-
-        auto screen = Image{width, height};
-
-        for (auto y = 0; y < height; ++y)
+        SECTION("parallel top and bottom edges vanishing point on the top")
         {
-            for (auto x = 0; x < width; ++x)
-            {
-                const auto point = Vector3{{static_cast<double>(x), static_cast<double>(y), 0.0}};
-                const auto coordinates = (*interpolation)(point);
+            const auto p1 = Vector3{{80.0, 20.0, 0.0}};
+            const auto p2 = Vector3{{10.0, 180.0, 0.0}};
+            const auto p3 = Vector3{{280.0, 180.0, 0.0}};
+            const auto p4 = Vector3{{200.0, 20.0, 0.0}};
 
-                if (between(coordinates(0), 0.0, 1.0) && between(coordinates(1), 0.0, 1.0) &&
-                    between(coordinates(2), 0.0, 1.0) && between(coordinates(3), 0.0, 1.0))
-                {
-                    const auto vertex =
-                        coordinates(0) * p1 + coordinates(1) * p2 + coordinates(2) * p3 + coordinates(3) * p4;
-                    const auto textureVertex = getRounded(coordinates(0) * texture1 + coordinates(1) * texture2 +
-                                                          coordinates(2) * texture3 + coordinates(3) * texture4);
+            const auto interpolation = canInterpolateBilineary(p1, p2, p3, p4);
 
-                    screen(x, y) = texture(textureVertex.x(), textureVertex.y());
-                }
-            }
+            REQUIRE(interpolation.has_value());
+
+            rasterizeTexture(texture, textureMapping, interpolation.value(), screen);
+
+            REQUIRE(checkImage(screen, "bilinear_interpolation_top_bottom_parallel_top_vanish.bmp"));
         }
 
-        REQUIRE(checkImage(screen, "bilinear_interpolation.bmp"));
+        SECTION("parallel left and right edges vanishing point on right")
+        {
+            const auto p1 = Vector3{{50.0, 10.0, 0.0}};
+            const auto p2 = Vector3{{50.0, 180.0, 0.0}};
+            const auto p3 = Vector3{{240.0, 140.0, 0.0}};
+            const auto p4 = Vector3{{240.0, 50.0, 0.0}};
+
+            const auto interpolation = canInterpolateBilineary(p1, p2, p3, p4);
+
+            REQUIRE(interpolation.has_value());
+
+            rasterizeTexture(texture, textureMapping, interpolation.value(), screen);
+
+            REQUIRE(checkImage(screen, "bilinear_interpolation_left_right_parallel_right_vanish.bmp"));
+        }
     }
 }
