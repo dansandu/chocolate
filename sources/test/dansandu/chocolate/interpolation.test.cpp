@@ -4,6 +4,7 @@
 #include "dansandu/canvas/color.hpp"
 #include "dansandu/chocolate/common.hpp"
 #include "dansandu/chocolate/common.test.hpp"
+#include "dansandu/chocolate/transformation.hpp"
 #include "dansandu/radiance/radiance.hpp"
 
 using dansandu::ballotin::string::format;
@@ -16,15 +17,21 @@ using dansandu::chocolate::checkImage;
 using dansandu::chocolate::ConstantTextureMappingView;
 using dansandu::chocolate::getRounded;
 using dansandu::chocolate::TextureMapping;
+using dansandu::chocolate::transposed;
 using dansandu::chocolate::Vector2;
 using dansandu::chocolate::Vector3;
+using dansandu::chocolate::Vertices;
 using dansandu::chocolate::interpolation::BarycentricCoordinates;
 using dansandu::chocolate::interpolation::BilinearInterpolation;
 using dansandu::chocolate::interpolation::canInterpolateBilineary;
 using dansandu::chocolate::interpolation::interpolate;
 using dansandu::chocolate::interpolation::isConvexPolygon;
 using dansandu::chocolate::interpolation::Line;
+using dansandu::chocolate::transformation::rotateByZ;
+using dansandu::chocolate::transformation::scale;
+using dansandu::chocolate::transformation::translate;
 using dansandu::math::close;
+using dansandu::math::pi;
 using dansandu::math::matrix::dynamic;
 using dansandu::math::matrix::Slicer;
 using dansandu::radiance::Tolerance;
@@ -251,49 +258,42 @@ TEST_CASE("interpolation")
         const auto textureHeight = texture.height();
 
         // clang-format off
+        const auto polygon = Vertices{{
+            { 90.0,  90.0, 0.0, 1.0},
+            {-90.0,  90.0, 0.0, 1.0},
+            {-40.0, -80.0, 0.0, 1.0},
+            { 60.0, -80.0, 0.0, 1.0},
+        }};
+
         const auto textureMapping = TextureMapping{{
+            {textureWidth - 1.0, 0.0,               },
             {0.0,                0.0,               },
             {0.0,                textureHeight - 1.0},
             {textureWidth - 1.0, textureHeight - 1.0},
-            {textureWidth - 1.0, 0.0,               },
         }};
         // clang-format on
 
-        const auto screenWidth = 300;
+        const auto screenWidth = 200;
         const auto screenHeight = 200;
 
-        auto screen = Image{screenWidth, screenHeight};
-
-        SECTION("parallel top and bottom edges vanishing point on the top")
+        for (auto i = 0; i < 4; ++i)
         {
-            const auto p1 = Vector3{{80.0, 20.0, 0.0}};
-            const auto p2 = Vector3{{10.0, 180.0, 0.0}};
-            const auto p3 = Vector3{{280.0, 180.0, 0.0}};
-            const auto p4 = Vector3{{200.0, 20.0, 0.0}};
+            auto screen = Image{screenWidth, screenHeight};
 
-            const auto interpolation = canInterpolateBilineary(p1, p2, p3, p4);
+            const auto radians = i * pi<double> / 2.0;
+
+            auto tPolygon =
+                polygon * transposed(translate(100.0, 100.0, 0.0) * scale(1.0, -1.0, 1.0) * rotateByZ(radians));
+
+            const auto slice = [&](const auto row) { return Slicer<dynamic, 0, 1, 3>::slice(tPolygon, row); };
+
+            const auto interpolation = canInterpolateBilineary(slice(0), slice(1), slice(2), slice(3));
 
             REQUIRE(interpolation.has_value());
 
             rasterizeTexture(texture, textureMapping, interpolation.value(), screen);
 
-            REQUIRE(checkImage(screen, "bilinear_interpolation_top_bottom_parallel_top_vanish.bmp"));
-        }
-
-        SECTION("parallel left and right edges vanishing point on right")
-        {
-            const auto p1 = Vector3{{50.0, 10.0, 0.0}};
-            const auto p2 = Vector3{{50.0, 180.0, 0.0}};
-            const auto p3 = Vector3{{240.0, 140.0, 0.0}};
-            const auto p4 = Vector3{{240.0, 50.0, 0.0}};
-
-            const auto interpolation = canInterpolateBilineary(p1, p2, p3, p4);
-
-            REQUIRE(interpolation.has_value());
-
-            rasterizeTexture(texture, textureMapping, interpolation.value(), screen);
-
-            REQUIRE(checkImage(screen, "bilinear_interpolation_left_right_parallel_right_vanish.bmp"));
+            REQUIRE(checkImage(screen, format("bilinear_interpolation_", i, ".bmp")));
         }
     }
 }
