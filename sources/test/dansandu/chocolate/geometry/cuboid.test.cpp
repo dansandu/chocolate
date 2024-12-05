@@ -14,7 +14,7 @@ using dansandu::canvas::color::Colors;
 using dansandu::canvas::gif::getGifBinary;
 using dansandu::canvas::image::Image;
 using dansandu::chocolate::transposed;
-using dansandu::chocolate::geometry::cuboid::generateCuboid;
+using dansandu::chocolate::geometry::cuboid::generateTriangleMeshCuboid;
 using dansandu::chocolate::raster::drawing::drawWireframe;
 using dansandu::math::pi;
 
@@ -24,7 +24,7 @@ TEST_CASE("cuboid")
 {
     auto images = std::vector<Image>{};
 
-    const auto [vertices, triangles] = generateCuboid(150.0, 150.0, 150.0);
+    const auto [vertices, triangles] = generateTriangleMeshCuboid(150.0, 150.0, 150.0);
     const auto width = 200;
     const auto height = 200;
     const auto frameCount = 100;

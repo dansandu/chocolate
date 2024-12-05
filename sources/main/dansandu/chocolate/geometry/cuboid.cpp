@@ -3,7 +3,7 @@
 namespace dansandu::chocolate::geometry::cuboid
 {
 
-std::pair<Vertices, Triangles> generateCuboid(const double length, const double height, const double width)
+std::pair<Vertices, Triangles> generateTriangleMeshCuboid(const double length, const double height, const double width)
 {
     const auto l = length / 2.0;
     const auto h = height / 2.0;
