@@ -27,6 +27,8 @@ using Vertices = dansandu::math::matrix::Matrix<double, dynamic, 4>;
 
 using Triangles = dansandu::math::matrix::Matrix<int, dynamic, 3>;
 
+using Polygons = dansandu::math::matrix::Matrix<int, dynamic, 4>;
+
 using Normals = dansandu::math::matrix::Matrix<double, dynamic, 3>;
 
 using TextureMapping = dansandu::math::matrix::Matrix<double, dynamic, 2>;
@@ -40,6 +42,8 @@ using ConstantVector3View = dansandu::math::matrix::ConstantMatrixView<double, 1
 using ConstantVerticesView = dansandu::math::matrix::ConstantMatrixView<double, dynamic, 4>;
 
 using ConstantTrianglesView = dansandu::math::matrix::ConstantMatrixView<int, dynamic, 3>;
+
+using ConstantPolygonsView = dansandu::math::matrix::ConstantMatrixView<int, dynamic, 4>;
 
 using ConstantNormalsView = dansandu::math::matrix::ConstantMatrixView<double, dynamic, 3>;
 

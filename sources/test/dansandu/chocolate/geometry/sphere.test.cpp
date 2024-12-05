@@ -55,7 +55,7 @@ TEST_CASE("sphere")
     auto sphereMatchesGif = (actual == readBinaryFile("resources/test/dansandu/chocolate/expected_sphere.gif"));
     if (!sphereMatchesGif)
     {
-        writeBinaryFile("target/actual_sphere.gif", actual);
+        writeBinaryFile("target/temporary/actual_sphere.gif", actual);
     }
 
     REQUIRE(sphereMatchesGif);

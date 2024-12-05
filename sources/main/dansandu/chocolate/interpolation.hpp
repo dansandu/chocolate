@@ -2,7 +2,7 @@
 
 #include "dansandu/chocolate/common.hpp"
 
-#include <optional>
+#include <variant>
 
 namespace dansandu::chocolate::interpolation
 {
@@ -45,12 +45,28 @@ private:
 bool isConvexPolygon(const ConstantVector2View a, const ConstantVector2View b, const ConstantVector2View c,
                      const ConstantVector2View d);
 
-class BilinearInterpolation
+class ParallelogramInterpolation
 {
 public:
-    BilinearInterpolation(const ConstantVector2View vanishingPoint, const Line& vanishingLine1,
-                          const Line& vanishingLine2, const Line& transversal1, const Line& transversal2,
-                          const bool shiftPoints);
+    ParallelogramInterpolation(const ConstantVector3View a, const ConstantVector3View b, const ConstantVector3View c);
+
+    Vector4 operator()(const ConstantVector3View vertex) const;
+
+private:
+    Vector3 a_;
+    Vector3 b_;
+    Vector3 ab_;
+    Vector3 bc_;
+    double dba_;
+    double dcb_;
+};
+
+class ConvexQuadrilateralInterpolation
+{
+public:
+    ConvexQuadrilateralInterpolation(const ConstantVector2View vanishingPoint, const Line& vanishingLine1,
+                                     const Line& vanishingLine2, const Line& transversal1, const Line& transversal2,
+                                     const bool shiftPoints);
 
     Vector4 operator()(const ConstantVector3View vertex) const;
 
@@ -63,8 +79,17 @@ private:
     bool shiftPoints_;
 };
 
-std::optional<BilinearInterpolation> canInterpolateBilineary(const ConstantVector3View a, const ConstantVector3View b,
-                                                             const ConstantVector3View c, const ConstantVector3View d);
+class BilinearInterpolation
+{
+public:
+    BilinearInterpolation(const ConstantVector3View a, const ConstantVector3View b, const ConstantVector3View c,
+                          const ConstantVector3View d);
+
+    Vector4 operator()(const ConstantVector3View vertex) const;
+
+private:
+    std::variant<std::monostate, ConvexQuadrilateralInterpolation, ParallelogramInterpolation> interpolation_;
+};
 
 Vector3 interpolate(const ConstantVector3View a, const ConstantVector3View b, const double x, const double y,
                     const double epsilon);

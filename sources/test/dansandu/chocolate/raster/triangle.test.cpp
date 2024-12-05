@@ -49,9 +49,9 @@ TEST_CASE("triangle")
             const auto b = Vector3{{49.0, 0.0, 0.0}};
             const auto c = Vector3{{0.0, 49.0, 0.0}};
 
-            drawTriangle(a, b, c, solidShader, false);
+            drawTriangle(a, b, c, false, solidShader);
 
-            drawTriangle(a, b, c, wireframeShader, true);
+            drawTriangle(a, b, c, true, wireframeShader);
 
             REQUIRE(checkImage(image, "flat_top_triangle_bottom_to_left.bmp"));
         }
@@ -62,9 +62,9 @@ TEST_CASE("triangle")
             const auto b = Vector3{{0.0, 0.0, 0.0}};
             const auto c = Vector3{{49.0, 49.0, 0.0}};
 
-            drawTriangle(a, b, c, solidShader, false);
+            drawTriangle(a, b, c, false, solidShader);
 
-            drawTriangle(a, b, c, wireframeShader, true);
+            drawTriangle(a, b, c, true, wireframeShader);
 
             REQUIRE(checkImage(image, "flat_top_triangle_bottom_to_right.bmp"));
         }
@@ -75,9 +75,9 @@ TEST_CASE("triangle")
             const auto b = Vector3{{25.0, 49.0, 0.0}};
             const auto c = Vector3{{0.0, 0.0, 0.0}};
 
-            drawTriangle(a, b, c, solidShader, false);
+            drawTriangle(a, b, c, false, solidShader);
 
-            drawTriangle(a, b, c, wireframeShader, true);
+            drawTriangle(a, b, c, true, wireframeShader);
 
             REQUIRE(checkImage(image, "flat_bottom_triangle_tip_to_the_left.bmp"));
         }
@@ -88,9 +88,9 @@ TEST_CASE("triangle")
             const auto b = Vector3{{0.0, 49.0, 0.0}};
             const auto c = Vector3{{49.0, 0.0, 0.0}};
 
-            drawTriangle(a, b, c, solidShader, false);
+            drawTriangle(a, b, c, false, solidShader);
 
-            drawTriangle(a, b, c, wireframeShader, true);
+            drawTriangle(a, b, c, true, wireframeShader);
 
             REQUIRE(checkImage(image, "flat_bottom_triangle_tip_to_the_right.bmp"));
         }
@@ -101,9 +101,9 @@ TEST_CASE("triangle")
             const auto b = Vector3{{30.0, 20.0, 0.0}};
             const auto c = Vector3{{49.0, 20.0, 0.0}};
 
-            drawTriangle(a, b, c, solidShader, false);
+            drawTriangle(a, b, c, false, solidShader);
 
-            drawTriangle(a, b, c, wireframeShader, true);
+            drawTriangle(a, b, c, true, wireframeShader);
 
             REQUIRE(checkImage(image, "flat_bottom_triangle_tip_to_the_left_sharp.bmp"));
         }
@@ -114,9 +114,9 @@ TEST_CASE("triangle")
             const auto b = Vector3{{0.0, 0.0, 0.0}};
             const auto c = Vector3{{5.0, 19.0, 0.0}};
 
-            drawTriangle(a, b, c, solidShader, false);
+            drawTriangle(a, b, c, false, solidShader);
 
-            drawTriangle(a, b, c, wireframeShader, true);
+            drawTriangle(a, b, c, true, wireframeShader);
 
             REQUIRE(checkImage(image, "obtuse_triangle.bmp"));
         }
@@ -139,6 +139,6 @@ TEST_CASE("triangle")
             }
         };
 
-        drawTriangle(a, b, c, shader, false);
+        drawTriangle(a, b, c, false, shader);
     }
 }
