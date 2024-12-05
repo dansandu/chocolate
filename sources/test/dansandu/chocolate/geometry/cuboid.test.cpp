@@ -56,7 +56,7 @@ TEST_CASE("cuboid")
         (actual == readBinaryFile("resources/test/dansandu/chocolate/expected_cuboid.gif"));
     if (!cuboidAnimationMatchesGif)
     {
-        writeBinaryFile("target/actual_cuboid.gif", actual);
+        writeBinaryFile("target/temporary/actual_cuboid.gif", actual);
     }
     REQUIRE(cuboidAnimationMatchesGif);
 }

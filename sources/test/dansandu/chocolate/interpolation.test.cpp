@@ -23,7 +23,6 @@ using dansandu::chocolate::Vector3;
 using dansandu::chocolate::Vertices;
 using dansandu::chocolate::interpolation::BarycentricCoordinates;
 using dansandu::chocolate::interpolation::BilinearInterpolation;
-using dansandu::chocolate::interpolation::canInterpolateBilineary;
 using dansandu::chocolate::interpolation::interpolate;
 using dansandu::chocolate::interpolation::isConvexPolygon;
 using dansandu::chocolate::interpolation::Line;
@@ -253,47 +252,84 @@ TEST_CASE("interpolation")
 
     SECTION("bilinear interpolation")
     {
-        const auto texture = readBitmapFile("resources/test/dansandu/chocolate/bilinear_interpolation_texture.bmp");
-        const auto textureWidth = texture.width();
-        const auto textureHeight = texture.height();
-
-        // clang-format off
-        const auto polygon = Vertices{{
-            { 90.0,  90.0, 0.0, 1.0},
-            {-90.0,  90.0, 0.0, 1.0},
-            {-40.0, -80.0, 0.0, 1.0},
-            { 60.0, -80.0, 0.0, 1.0},
-        }};
-
-        const auto textureMapping = TextureMapping{{
-            {textureWidth - 1.0, 0.0,               },
-            {0.0,                0.0,               },
-            {0.0,                textureHeight - 1.0},
-            {textureWidth - 1.0, textureHeight - 1.0},
-        }};
-        // clang-format on
-
-        const auto screenWidth = 200;
-        const auto screenHeight = 200;
-
-        for (auto i = 0; i < 4; ++i)
+        SECTION("skewed")
         {
+            const auto texture = readBitmapFile("resources/test/dansandu/chocolate/bilinear_interpolation_texture.bmp");
+            const auto textureWidth = texture.width();
+            const auto textureHeight = texture.height();
+
+            // clang-format off
+            const auto polygon = Vertices{{
+                { 90.0,  90.0, 0.0, 1.0},
+                {-90.0,  90.0, 0.0, 1.0},
+                {-40.0, -80.0, 0.0, 1.0},
+                { 60.0, -80.0, 0.0, 1.0},
+            }};
+
+            const auto textureMapping = TextureMapping{{
+                {textureWidth - 1.0, 0.0,               },
+                {0.0,                0.0,               },
+                {0.0,                textureHeight - 1.0},
+                {textureWidth - 1.0, textureHeight - 1.0},
+            }};
+            // clang-format on
+
+            const auto screenWidth = 200;
+            const auto screenHeight = 200;
+
+            for (auto i = 0; i < 4; ++i)
+            {
+                auto screen = Image{screenWidth, screenHeight};
+
+                const auto radians = i * pi<double> / 2.0;
+
+                auto tPolygon =
+                    polygon * transposed(translate(100.0, 100.0, 0.0) * scale(1.0, -1.0, 1.0) * rotateByZ(radians));
+
+                const auto vertex = [&](const auto row) { return Slicer<dynamic, 0, 1, 3>::slice(tPolygon, row); };
+
+                const auto interpolation = BilinearInterpolation(vertex(0), vertex(1), vertex(2), vertex(3));
+
+                rasterizeTexture(texture, textureMapping, interpolation, screen);
+
+                REQUIRE(checkImage(screen, format("bilinear_interpolation_", i, ".bmp")));
+            }
+        }
+
+        SECTION("rectangular")
+        {
+            const auto texture = readBitmapFile("resources/test/dansandu/chocolate/bilinear_interpolation_texture.bmp");
+
+            // clang-format off
+            const auto polygon = Vertices{{
+                { 90.0,  90.0, 0.0, 1.0},
+                {-90.0,  90.0, 0.0, 1.0},
+                {-90.0, -90.0, 0.0, 1.0},
+                { 90.0, -90.0, 0.0, 1.0},
+            }};
+
+            const auto textureMapping = TextureMapping{{
+                {texture.width() - 1.0, 0.0,                  },
+                {0.0,                   0.0,                  },
+                {0.0,                   texture.height() - 1.0},
+                {texture.width() - 1.0, texture.height() - 1.0},
+            }};
+            // clang-format on
+
+            const auto screenWidth = 200;
+            const auto screenHeight = 200;
+
             auto screen = Image{screenWidth, screenHeight};
 
-            const auto radians = i * pi<double> / 2.0;
+            auto tPolygon = polygon * transposed(translate(100.0, 100.0, 0.0) * scale(1.0, -1.0, 1.0));
 
-            auto tPolygon =
-                polygon * transposed(translate(100.0, 100.0, 0.0) * scale(1.0, -1.0, 1.0) * rotateByZ(radians));
+            const auto vertex = [&](const auto row) { return Slicer<dynamic, 0, 1, 3>::slice(tPolygon, row); };
 
-            const auto slice = [&](const auto row) { return Slicer<dynamic, 0, 1, 3>::slice(tPolygon, row); };
+            const auto interpolation = BilinearInterpolation(vertex(0), vertex(1), vertex(2), vertex(3));
 
-            const auto interpolation = canInterpolateBilineary(slice(0), slice(1), slice(2), slice(3));
+            rasterizeTexture(texture, textureMapping, interpolation, screen);
 
-            REQUIRE(interpolation.has_value());
-
-            rasterizeTexture(texture, textureMapping, interpolation.value(), screen);
-
-            REQUIRE(checkImage(screen, format("bilinear_interpolation_", i, ".bmp")));
+            REQUIRE(checkImage(screen, format("bilinear_interpolation_rectangular.bmp")));
         }
     }
 }

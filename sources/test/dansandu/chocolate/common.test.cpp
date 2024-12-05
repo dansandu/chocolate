@@ -20,7 +20,7 @@ bool checkImage(const Image& actualImage, const std::string& fileName)
     const auto expectedImage = readBitmapFile(expectedImagePath);
     if (actualImage != expectedImage)
     {
-        const auto actualImagePath = "target/actual_" + fileName;
+        const auto actualImagePath = "target/temporary/actual_" + fileName;
         writeBitmapFile(actualImagePath, actualImage);
 
         THROW(std::runtime_error, "actual image does not match expected image ", expectedImagePath, " -- check ",

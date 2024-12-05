@@ -103,4 +103,33 @@ std::pair<Triangles, Normals> cull(const ConstantVerticesView vertices, const Co
             Normals{triangleCount, Normals::staticColumnCount, std::move(normalBuffer)}};
 }
 
+std::pair<Polygons, Normals> cull(const ConstantVerticesView vertices, const ConstantPolygonsView polygons)
+{
+    const auto getVertex = [&](const int i, const int v) { return Vector3Slicer::slice(vertices, polygons(i, v)); };
+
+    auto polygonBuffer = std::vector<size_type>{};
+    auto normalBuffer = std::vector<double>{};
+
+    for (auto i = 0; i < polygons.rowCount(); ++i)
+    {
+        const auto a = getVertex(i, 0);
+        const auto b = getVertex(i, 1);
+        const auto c = getVertex(i, 2);
+
+        const auto normal = normalized(crossProduct(b - a, c - a));
+
+        if (dotProduct(a, normal) < 0.0)
+        {
+            const auto polygon = sliceRow(polygons, i);
+            polygonBuffer.insert(polygonBuffer.end(), polygon.cbegin(), polygon.cend());
+            normalBuffer.insert(normalBuffer.end(), normal.cbegin(), normal.cend());
+        }
+    }
+
+    const auto polygonsCount = static_cast<size_type>(polygonBuffer.size()) / polygons.columnCount();
+
+    return {Polygons{polygonsCount, polygons.columnCount(), std::move(polygonBuffer)},
+            Normals{polygonsCount, Normals::staticColumnCount, std::move(normalBuffer)}};
+}
+
 }

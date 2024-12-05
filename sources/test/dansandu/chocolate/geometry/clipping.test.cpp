@@ -131,7 +131,7 @@ TEST_CASE("clipping")
             (actual == readBinaryFile("resources/test/dansandu/chocolate/expected_clip_and_cull.gif"));
         if (!clipAndCullMatchesGif)
         {
-            writeBinaryFile("target/actual_clip_and_cull.gif", actual);
+            writeBinaryFile("target/temporary/actual_clip_and_cull.gif", actual);
         }
 
         REQUIRE(clipAndCullMatchesGif);

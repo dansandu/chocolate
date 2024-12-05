@@ -10,4 +10,6 @@ std::tuple<Vertices, Triangles, Normals> clip(const ConstantVerticesView vertice
 
 std::pair<Triangles, Normals> cull(const ConstantVerticesView vertices, const ConstantTrianglesView triangles);
 
+std::pair<Polygons, Normals> cull(const ConstantVerticesView vertices, const ConstantPolygonsView polygons);
+
 }

@@ -79,7 +79,7 @@ TEST_CASE("line_tracer")
     const auto success = expected == actual;
     if (!success)
     {
-        writeBitmapFile("target/actual_line_tracer.bmp", actual);
+        writeBitmapFile("target/temporary/actual_line_tracer.bmp", actual);
     }
     REQUIRE(success);
 }

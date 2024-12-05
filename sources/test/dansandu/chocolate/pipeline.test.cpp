@@ -56,7 +56,7 @@ TEST_CASE("pipeline")
             (actual == readBinaryFile("resources/test/dansandu/chocolate/expected_pipeline_clip.gif"));
         if (!pipelineClipMatchesGif)
         {
-            writeBinaryFile("target/actual_pipeline_clip.gif", actual);
+            writeBinaryFile("target/temporary/actual_pipeline_clip.gif", actual);
         }
         REQUIRE(pipelineClipMatchesGif);
     }

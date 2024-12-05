@@ -11,6 +11,6 @@ using ShaderType = std::function<void(const ConstantVector3View vertex, const do
                                       const double gamma, const double delta)>;
 
 void drawPolygon(const ConstantVector3View a, const ConstantVector3View b, const ConstantVector3View c,
-                 const ConstantVector3View d, const ShaderType& shader, const bool wireframe);
+                 const ConstantVector3View d, const bool wireframe, const ShaderType& shader);
 
 }

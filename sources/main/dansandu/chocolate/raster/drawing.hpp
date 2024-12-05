@@ -19,4 +19,8 @@ void drawTexture(const ConstantVerticesView vertices, const ConstantTrianglesVie
                  const ConstantTextureMappingView textureMapping, const dansandu::canvas::image::Image& texture,
                  dansandu::canvas::image::Image& image);
 
+void drawTexture(const ConstantVerticesView vertices, const ConstantPolygonsView polygons,
+                 const ConstantTextureMappingView textureMapping, const dansandu::canvas::image::Image& texture,
+                 dansandu::canvas::image::Image& image);
+
 }

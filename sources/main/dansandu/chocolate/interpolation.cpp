@@ -119,9 +119,31 @@ bool isConvexPolygon(const ConstantVector2View a, const ConstantVector2View b, c
            ((turn1 < 0.0) & (turn2 < 0.0) & (turn3 < 0.0) & (turn4 < 0.0));
 }
 
-BilinearInterpolation::BilinearInterpolation(const ConstantVector2View vanishingPoint, const Line& vanishingLine1,
-                                             const Line& vanishingLine2, const Line& transversal1,
-                                             const Line& transversal2, const bool shiftPoints)
+ParallelogramInterpolation::ParallelogramInterpolation(const ConstantVector3View a, const ConstantVector3View b,
+                                                       const ConstantVector3View c)
+    : a_{a}, b_{b}, ab_{b - a}, bc_{c - b}
+{
+    dba_ = dotProduct(ab_, ab_);
+    dcb_ = dotProduct(bc_, bc_);
+}
+
+Vector4 ParallelogramInterpolation::operator()(const ConstantVector3View vertex) const
+{
+    const auto t1 = dotProduct(vertex - a_, ab_) / dba_;
+    const auto t2 = dotProduct(vertex - b_, bc_) / dcb_;
+
+    const auto alpha = (1.0 - t1) * (1.0 - t2);
+    const auto beta = t1 * (1.0 - t2);
+    const auto gamma = t1 * t2;
+    const auto delta = (1.0 - t1) * t2;
+
+    return Vector4{{alpha, beta, gamma, delta}};
+}
+
+ConvexQuadrilateralInterpolation::ConvexQuadrilateralInterpolation(const ConstantVector2View vanishingPoint,
+                                                                   const Line& vanishingLine1,
+                                                                   const Line& vanishingLine2, const Line& transversal1,
+                                                                   const Line& transversal2, const bool shiftPoints)
     : vanishingPoint_{vanishingPoint},
       vanishingLine1_{vanishingLine1},
       vanishingLine2_{vanishingLine2},
@@ -131,10 +153,8 @@ BilinearInterpolation::BilinearInterpolation(const ConstantVector2View vanishing
 {
 }
 
-Vector4 BilinearInterpolation::operator()(const ConstantVector3View vertex) const
+Vector4 ConvexQuadrilateralInterpolation::operator()(const ConstantVector3View vertex) const
 {
-    auto result = Vector3{};
-
     const auto slice = [](const auto& vector) { return Slicer<0, 0, 1, 2>::slice(vector); };
 
     const auto point = slice(vertex);
@@ -176,8 +196,8 @@ Vector4 BilinearInterpolation::operator()(const ConstantVector3View vertex) cons
     }
 }
 
-std::optional<BilinearInterpolation> canInterpolateBilineary(const ConstantVector3View a, const ConstantVector3View b,
-                                                             const ConstantVector3View c, const ConstantVector3View d)
+BilinearInterpolation::BilinearInterpolation(const ConstantVector3View a, const ConstantVector3View b,
+                                             const ConstantVector3View c, const ConstantVector3View d)
 {
     const auto slice = [](const auto& vector) { return Slicer<0, 0, 1, 2>::slice(vector); };
 
@@ -197,15 +217,33 @@ std::optional<BilinearInterpolation> canInterpolateBilineary(const ConstantVecto
 
         if (ab.intersect(cd, vanishingPoint))
         {
-            return BilinearInterpolation{vanishingPoint, ab, cd, da, bc, false};
+            interpolation_ = ConvexQuadrilateralInterpolation{vanishingPoint, ab, cd, da, bc, false};
         }
         else if (da.intersect(bc, vanishingPoint))
         {
-            return BilinearInterpolation{vanishingPoint, da, bc, cd, ab, true};
+            interpolation_ = ConvexQuadrilateralInterpolation{vanishingPoint, da, bc, cd, ab, true};
+        }
+        else
+        {
+            interpolation_ = ParallelogramInterpolation{a, b, c};
         }
     }
+    else
+    {
+        THROW(std::logic_error, "cannot interpolate a non-convex polygon");
+    }
+}
 
-    return {};
+Vector4 BilinearInterpolation::operator()(const ConstantVector3View vertex) const
+{
+    if (const auto pointer = std::get_if<ConvexQuadrilateralInterpolation>(&interpolation_); pointer != nullptr)
+    {
+        return (*pointer)(vertex);
+    }
+    else
+    {
+        return std::get<ParallelogramInterpolation>(interpolation_)(vertex);
+    }
 }
 
 Vector3 interpolate(const ConstantVector3View a, const ConstantVector3View b, const double x, const double y,

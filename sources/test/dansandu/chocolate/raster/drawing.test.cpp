@@ -32,7 +32,7 @@ using dansandu::chocolate::Vector3;
 using dansandu::chocolate::Vertices;
 using dansandu::chocolate::geometry::clipping::clip;
 using dansandu::chocolate::geometry::clipping::cull;
-using dansandu::chocolate::geometry::cuboid::generateCuboid;
+using dansandu::chocolate::geometry::cuboid::generatePolygonMeshCuboid;
 using dansandu::chocolate::geometry::plane::generatePlane;
 using dansandu::chocolate::geometry::sphere::generateSphere;
 using dansandu::chocolate::raster::drawing::drawFlat;
@@ -96,7 +96,7 @@ TEST_CASE("drawing")
             (actual == readBinaryFile("resources/test/dansandu/chocolate/expected_flat_shading.gif"));
         if (!flatShadingMatchesGif)
         {
-            writeBinaryFile("target/actual_flat_shading.gif", actual);
+            writeBinaryFile("target/temporary/actual_flat_shading.gif", actual);
         }
         REQUIRE(flatShadingMatchesGif);
     }
@@ -133,7 +133,7 @@ TEST_CASE("drawing")
         REQUIRE(checkImage(image, "simple_texture.bmp"));
     }
 
-    SECTION("perspective texture")
+    SECTION("triangle texture")
     {
         const auto width = 200;
         const auto height = 200;
@@ -161,5 +161,87 @@ TEST_CASE("drawing")
         drawTexture(tVertices, triangles, textureMapping, texture, image);
 
         REQUIRE(checkImage(image, "perspective_texture.bmp"));
+    }
+
+    SECTION("polygon texture")
+    {
+        auto images = std::vector<Image>{};
+
+        const auto [vertices, polygons] = generatePolygonMeshCuboid(150.0, 150.0, 150.0);
+        const auto width = 200;
+        const auto height = 200;
+        const auto frameCount = 200;
+
+        const auto texture = readBitmapFile("resources/test/dansandu/chocolate/cuboid_texture.bmp");
+
+        // clang-format off
+        const auto textureMapping = TextureMapping{{
+            {  0.0,   0.0},
+            {  0.0,  50.0},
+            { 50.0,  50.0},
+            { 50.0,   0.0},
+
+            { 50.0,   0.0},
+            { 50.0,  50.0},
+            {100.0,  50.0},
+            {100.0,   0.0},
+
+            {100.0,   0.0},
+            {100.0,  50.0},
+            {150.0,  50.0},
+            {150.0,   0.0},
+
+            {  0.0,  50.0},
+            {  0.0, 100.0},
+            { 50.0, 100.0},
+            { 50.0,  50.0},
+
+            { 50.0,  50.0},
+            { 50.0, 100.0},
+            {100.0, 100.0},
+            {100.0,  50.0},
+
+            {100.0,  50.0},
+            {100.0, 100.0},
+            {150.0, 100.0},
+            {150.0,  50.0},
+        }};
+        // clang-format on
+
+        for (auto i = 0; i < frameCount; ++i)
+        {
+            const auto radians = i * 2.0 * pi<double> / (frameCount - 1);
+
+            const auto transformation =
+                transposed(translate(0.0, -50.0, -220.0) * rotateByY(radians) * rotateByX(radians));
+
+            auto tVertices = vertices * transformation;
+            auto [culledPolygons, normals] = cull(tVertices, polygons);
+
+            tVertices = tVertices * transposed(perspective(1.0, 2000.0, 1.92, 1.0));
+            tVertices = dehomogenized(tVertices) * transposed(viewport(width, height));
+
+            auto frame = Image{width, height};
+
+            drawTexture(tVertices, culledPolygons, textureMapping, texture, frame);
+            images.push_back(std::move(frame));
+        }
+
+        auto frames = std::vector<const Image*>{};
+        for (const auto& image : images)
+        {
+            frames.push_back(&image);
+        }
+
+        const auto delayCentiseconds = 3;
+        const auto actual = getGifBinary(frames, delayCentiseconds);
+
+        auto cuboidAnimationMatchesGif =
+            (actual == readBinaryFile("resources/test/dansandu/chocolate/expected_polygon_texture.gif"));
+        if (!cuboidAnimationMatchesGif)
+        {
+            writeBinaryFile("target/temporary/actual_polygon_texture.gif", actual);
+        }
+        REQUIRE(cuboidAnimationMatchesGif);
     }
 }
