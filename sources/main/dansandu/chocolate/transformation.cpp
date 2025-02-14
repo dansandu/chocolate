@@ -97,11 +97,11 @@ Matrix4 perspective(const double near, const double far, const double fieldOfVie
 {
     const auto ctg = 1.0 / std::tan(0.5 * fieldOfViewRadians);
     const auto p33 = (far + near) / (near - far);
-    const auto p43 = 2.0 * far * near / (near - far);
+    const auto p34 = 2.0 * far * near / (near - far);
     // clang-format off
     return Matrix4{{{ctg,          0.0,  0.0, 0.0}, 
                     {0.0, aspect * ctg,  0.0, 0.0},
-                    {0.0,          0.0,  p33, p43},
+                    {0.0,          0.0,  p33, p34},
                     {0.0,          0.0, -1.0, 0.0}}};
     // clang-format on
 }
