@@ -62,9 +62,12 @@ inline Vector3 toVector3(const dansandu::canvas::color::Color color)
 
 inline dansandu::canvas::color::Color toColor(const ConstantVector3View vector)
 {
-    return dansandu::canvas::color::Color(std::min(255.0, std::max(0.0, 255.0 * vector.x())),
-                                          std::min(255.0, std::max(0.0, 255.0 * vector.y())),
-                                          std::min(255.0, std::max(0.0, 255.0 * vector.z())));
+    using dansandu::canvas::color::Color;
+
+    const auto truncated = [](const double value)
+    { return (value >= 1.0) * 255 + ((value > 0.0) & (value < 1.0)) * static_cast<Color::value_type>(255.0 * value); };
+
+    return Color(truncated(vector.x()), truncated(vector.y()), truncated(vector.z()));
 }
 
 template<typename T, int M, int N, dansandu::math::matrix::DataStorageStrategy S>
@@ -74,7 +77,7 @@ getRounded(const dansandu::math::matrix::MatrixImplementation<T, M, N, S>& matri
     auto result = dansandu::math::matrix::Matrix<int, M, N>{matrix.rowCount(), matrix.columnCount()};
     auto source = matrix.cbegin();
     auto target = result.begin();
-    while (source != matrix.cend() && target != result.end())
+    while (source != matrix.cend())
     {
         *target++ = static_cast<int>(std::round(*source++));
     }
