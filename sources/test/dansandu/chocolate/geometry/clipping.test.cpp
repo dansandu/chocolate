@@ -14,7 +14,7 @@
 
 using dansandu::ballotin::file_system::readBinaryFile;
 using dansandu::ballotin::file_system::writeBinaryFile;
-using dansandu::canvas::color::Colors;
+using dansandu::canvas::color::Color;
 using dansandu::canvas::gif::getGifBinary;
 using dansandu::canvas::image::Image;
 using dansandu::chocolate::Normals;
@@ -114,7 +114,7 @@ TEST_CASE("clipping")
             std::get<0>(mesh) = dehomogenized(std::get<0>(mesh)) * transposed(viewport(width, height));
 
             auto frame = Image{width, height};
-            drawWireframe(std::get<0>(mesh), std::get<1>(mesh), Colors::turquoise, frame);
+            drawWireframe(std::get<0>(mesh), std::get<1>(mesh), Color::turquoise, frame);
             images.push_back(std::move(frame));
         }
 

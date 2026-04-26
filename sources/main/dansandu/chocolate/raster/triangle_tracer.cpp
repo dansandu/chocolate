@@ -17,7 +17,7 @@ namespace dansandu::chocolate::raster::triangle_tracer
 
 static std::vector<int> getYxOrderPermutation(const std::vector<Point2>& points)
 {
-    auto permutation = getIdentityPermutation(points.size());
+    auto permutation = getIdentityPermutation(static_cast<int>(points.size()));
 
     const auto comparator = [&points](const auto a, const auto b)
     { return points[a].y() < points[b].y() || (points[a].y() == points[b].y() && points[a].x() < points[b].x()); };

@@ -3,14 +3,14 @@
 #include "dansandu/canvas/bitmap.hpp"
 #include "dansandu/canvas/color.hpp"
 #include "dansandu/chocolate/common.hpp"
-#include "dansandu/chocolate/common.test.hpp"
 #include "dansandu/chocolate/transformation.hpp"
+#include "dansandu/chocolate/utility.hpp"
 #include "dansandu/radiance/radiance.hpp"
 
 using dansandu::ballotin::string::format;
 using dansandu::canvas::bitmap::readBitmapFile;
 using dansandu::canvas::bitmap::writeBitmapFile;
-using dansandu::canvas::color::Colors;
+using dansandu::canvas::color::Color;
 using dansandu::canvas::image::Image;
 using dansandu::chocolate::between;
 using dansandu::chocolate::checkImage;
@@ -128,14 +128,18 @@ TEST_CASE("interpolation")
                 if (std::all_of(coordinates.cbegin(), coordinates.cend(),
                                 [](const auto& c) { return 0.0 <= c && c <= 1.0; }))
                 {
-                    image(x, y) = Colors::white;
+                    image(x, y) = Color::white;
                 }
             }
         }
 
-        image(a.x(), a.y()) = Colors::red;
-        image(b.x(), b.y()) = Colors::red;
-        image(c.x(), c.y()) = Colors::red;
+        const auto screen_a = getRounded(a);
+        const auto screen_b = getRounded(b);
+        const auto screen_c = getRounded(c);
+
+        image(screen_a.x(), screen_a.y()) = Color::red;
+        image(screen_b.x(), screen_b.y()) = Color::red;
+        image(screen_c.x(), screen_c.y()) = Color::red;
 
         REQUIRE(goodCoordinates);
 

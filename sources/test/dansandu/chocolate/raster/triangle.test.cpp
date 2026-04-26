@@ -4,7 +4,7 @@
 #include "dansandu/canvas/color.hpp"
 #include "dansandu/canvas/image.hpp"
 #include "dansandu/chocolate/common.hpp"
-#include "dansandu/chocolate/common.test.hpp"
+#include "dansandu/chocolate/utility.hpp"
 #include "dansandu/math/common.hpp"
 #include "dansandu/radiance/radiance.hpp"
 
@@ -13,10 +13,11 @@
 using dansandu::ballotin::string::format;
 using dansandu::canvas::bitmap::readBitmapFile;
 using dansandu::canvas::bitmap::writeBitmapFile;
-using dansandu::canvas::color::Colors;
+using dansandu::canvas::color::Color;
 using dansandu::canvas::image::Image;
 using dansandu::chocolate::checkImage;
 using dansandu::chocolate::ConstantVector3View;
+using dansandu::chocolate::getRounded;
 using dansandu::chocolate::toColor;
 using dansandu::chocolate::Vector3;
 using dansandu::chocolate::raster::triangle::drawTriangle;
@@ -34,13 +35,19 @@ TEST_CASE("triangle")
             const auto green = Vector3{{0.0, 1.0, 0.0}};
             const auto blue = Vector3{{0.0, 0.0, 1.0}};
             const auto color = u * red + v * green + w * blue;
-            image(vertex.x(), vertex.y()) = toColor(color);
+
+            const auto screen = getRounded(vertex);
+
+            image(screen.x(), screen.y()) = toColor(color);
         };
 
         const auto wireframeShader = [&](const ConstantVector3View vertex, const double, const double, const double)
         {
-            auto& color = image(vertex.x(), vertex.y());
-            color = color == Colors::black ? Colors::red : Colors::white;
+            const auto screen = getRounded(vertex);
+
+            auto& color = image(screen.x(), screen.y());
+
+            color = color == Color::black ? Color::red : Color::white;
         };
 
         SECTION("flat top triangle with bottom vertex to the left")

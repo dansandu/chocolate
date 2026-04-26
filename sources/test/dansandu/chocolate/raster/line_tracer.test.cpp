@@ -10,7 +10,7 @@
 
 using dansandu::canvas::bitmap::readBitmapFile;
 using dansandu::canvas::bitmap::writeBitmapFile;
-using dansandu::canvas::color::Colors;
+using dansandu::canvas::color::Color;
 using dansandu::canvas::image::Image;
 using dansandu::chocolate::Point2;
 using dansandu::chocolate::raster::line_tracer::LineTracer;
@@ -23,25 +23,25 @@ static int toInt(const double value)
 
 static void plotInbetween(Image& image, const Point2 point)
 {
-    if (auto& color = image(point); color == Colors::black)
+    if (auto& color = image(point.x(), point.y()); color == Color::black)
     {
-        color = Colors::white;
+        color = Color::white;
     }
     else
     {
-        color = Colors::red;
+        color = Color::red;
     }
 }
 
 static void plotEnd(Image& image, const Point2 point)
 {
-    if (auto& color = image(point); color == Colors::white)
+    if (auto& color = image(point.x(), point.y()); color == Color::white)
     {
-        color = Colors::green;
+        color = Color::green;
     }
     else
     {
-        color = Colors::red;
+        color = Color::red;
     }
 }
 
