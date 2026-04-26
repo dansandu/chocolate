@@ -38,7 +38,10 @@ void drawFlat(const ConstantVerticesView vertices, const ConstantTrianglesView t
         const auto color = toColor(objectColorVec + diffuseColorVec * gamma);
 
         const auto shader = [&](const auto vertex, const auto, const auto, const auto)
-        { image(vertex.x(), vertex.y()) = color; };
+        {
+            const auto uv = getRounded(vertex);
+            image(uv.x(), uv.y()) = color;
+        };
 
         const auto wireframe = false;
 
@@ -59,7 +62,10 @@ void drawWireframe(const ConstantVerticesView vertices, const ConstantTrianglesV
         auto c = slice(triangle, 2);
 
         const auto shader = [&](const auto vertex, const auto, const auto, const auto)
-        { image(vertex.x(), vertex.y()) = color; };
+        {
+            const auto screen = getRounded(vertex);
+            image(screen.x(), screen.y()) = color;
+        };
 
         const auto wireframe = true;
 
@@ -67,10 +73,13 @@ void drawWireframe(const ConstantVerticesView vertices, const ConstantTrianglesV
     }
 }
 
-void drawTexture(const ConstantVerticesView vertices, const ConstantTrianglesView triangles,
-                 const ConstantTextureMappingView textureMapping, const Image& texture, Image& image)
+void drawTexture(const ConstantVerticesView vertices, const ConstantColumnVectorView depth,
+                 const ConstantTrianglesView triangles, const ConstantTextureMappingView textureMapping,
+                 const Image& texture, Image& image)
 {
     const auto getVertex = [&](const int t, const int v) { return Vector3Slicer::slice(vertices, triangles(t, v)); };
+
+    const auto getDepth = [&](const int t, const int v) { return depth(triangles(t, v)); };
 
     const auto getTextureMapping = [&](const int t, const int v) { return sliceRow(textureMapping, triangles(t, v)); };
 
@@ -80,19 +89,25 @@ void drawTexture(const ConstantVerticesView vertices, const ConstantTrianglesVie
         const auto b = getVertex(t, 1);
         const auto c = getVertex(t, 2);
 
+        const auto da = getDepth(t, 0);
+        const auto db = getDepth(t, 1);
+        const auto dc = getDepth(t, 2);
+
         const auto ta = getTextureMapping(t, 0);
         const auto tb = getTextureMapping(t, 1);
         const auto tc = getTextureMapping(t, 2);
 
         const auto shader = [&](const auto vertex, const auto u, const auto v, const auto w)
         {
-            const auto up = u / a.z();
-            const auto vp = v / b.z();
-            const auto wp = w / c.z();
+            const auto up = u / da;
+            const auto vp = v / db;
+            const auto wp = w / dc;
+
             const auto td = getRounded((up * ta + vp * tb + wp * tc) / (up + vp + wp));
-            const auto tx = std::min(texture.width() - 1, std::max(0, td.x()));
-            const auto ty = std::min(texture.height() - 1, std::max(0, td.y()));
-            image(vertex.x(), vertex.y()) = texture(tx, ty);
+
+            const auto screen = getRounded(vertex);
+
+            image(screen.x(), screen.y()) = texture.clampedIndex(td.x(), td.y());
         };
 
         const auto wireframe = false;
@@ -125,10 +140,10 @@ void drawTexture(const ConstantVerticesView vertices, const ConstantPolygonsView
             [&](const auto vertex, const auto alpha, const auto beta, const auto gamma, const auto delta)
         {
             const auto tv = getRounded(alpha * ta + beta * tb + gamma * tc + delta * td);
-            const auto tx = std::min(texture.width() - 1, std::max(0, tv.x()));
-            const auto ty = std::min(texture.height() - 1, std::max(0, tv.y()));
 
-            image(vertex.x(), vertex.y()) = texture(tx, ty);
+            const auto screen = getRounded(vertex);
+
+            image(screen.x(), screen.y()) = texture.clampedIndex(tv.x(), tv.y());
         };
 
         const auto wireframe = false;

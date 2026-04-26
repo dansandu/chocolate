@@ -1,6 +1,6 @@
 #include "dansandu/chocolate/interpolation.hpp"
-#include "dansandu/ballotin/exception.hpp"
 #include "dansandu/chocolate/common.hpp"
+#include "dansandu/journey/exception.hpp"
 #include "dansandu/math/matrix.hpp"
 
 #include <cmath>

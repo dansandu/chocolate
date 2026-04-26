@@ -1,33 +1,38 @@
-#include "dansandu/chocolate/common.test.hpp"
-#include "dansandu/ballotin/string.hpp"
-#include "dansandu/canvas/bitmap.hpp"
-#include "dansandu/canvas/image.hpp"
+#include "dansandu/chocolate/common.hpp"
+#include "dansandu/radiance/radiance.hpp"
 
-#include <stdexcept>
-#include <string>
+using dansandu::canvas::color::Color;
+using dansandu::chocolate::toColor;
+using dansandu::chocolate::Vector3;
 
-using dansandu::ballotin::string::format;
-using dansandu::canvas::bitmap::readBitmapFile;
-using dansandu::canvas::bitmap::writeBitmapFile;
-using dansandu::canvas::image::Image;
-
-namespace dansandu::chocolate
+TEST_CASE("common")
 {
-
-bool checkImage(const Image& actualImage, const std::string& fileName)
-{
-    const auto expectedImagePath = "resources/test/dansandu/chocolate/expected_" + fileName;
-    const auto expectedImage = readBitmapFile(expectedImagePath);
-    if (actualImage != expectedImage)
+    SECTION("toColor")
     {
-        const auto actualImagePath = "target/temporary/actual_" + fileName;
-        writeBitmapFile(actualImagePath, actualImage);
+        SECTION("outside [0, 1] interval")
+        {
+            const auto vector = Vector3{{-5.0, -0.1, 2.0}};
 
-        THROW(std::runtime_error, "actual image does not match expected image ", expectedImagePath, " -- check ",
-              actualImagePath, " for comparison");
+            const auto color = toColor(vector);
+
+            REQUIRE(color.getRedChannel() == 0);
+
+            REQUIRE(color.getGreenChannel() == 0);
+
+            REQUIRE(color.getBlueChannel() == 255);
+        }
+
+        SECTION("within [0, 1] interval")
+        {
+            const auto vector = Vector3{{0.0, 0.2, 1.0}};
+
+            const auto color = toColor(vector);
+
+            REQUIRE(color.getRedChannel() == 0);
+
+            REQUIRE(color.getGreenChannel() == 51);
+
+            REQUIRE(color.getBlueChannel() == 255);
+        }
     }
-
-    return true;
-}
-
 }

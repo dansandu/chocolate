@@ -10,7 +10,7 @@
 
 using dansandu::ballotin::file_system::readBinaryFile;
 using dansandu::ballotin::file_system::writeBinaryFile;
-using dansandu::canvas::color::Colors;
+using dansandu::canvas::color::Color;
 using dansandu::canvas::gif::getGifBinary;
 using dansandu::canvas::image::Image;
 using dansandu::chocolate::geometry::plane::generatePlane;
@@ -39,7 +39,7 @@ TEST_CASE("pipeline")
                 translate(0.0, -20.0, -100.0) * rotateByY(rotation) * rotateByX(0.5 * pi<double>);
 
             auto image = Image{width, height};
-            pipeline.renderWireframe(vertices, triangles, transformation, Colors::magenta, image);
+            pipeline.renderWireframe(vertices, triangles, transformation, Color::magenta, image);
             images.push_back(std::move(image));
         }
 

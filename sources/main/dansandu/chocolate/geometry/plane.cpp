@@ -1,6 +1,6 @@
 #include "dansandu/chocolate/geometry/plane.hpp"
-#include "dansandu/ballotin/exception.hpp"
 #include "dansandu/chocolate/common.hpp"
+#include "dansandu/journey/exception.hpp"
 #include "dansandu/math/common.hpp"
 
 namespace dansandu::chocolate::geometry::plane

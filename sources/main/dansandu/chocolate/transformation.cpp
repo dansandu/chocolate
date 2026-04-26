@@ -118,10 +118,11 @@ Vertices dehomogenized(const ConstantVerticesView vertices)
     auto result = static_cast<Vertices>(vertices);
     for (auto i = 0; i < result.rowCount(); ++i)
     {
-        for (auto j = 0; j < result.columnCount(); ++j)
+        for (auto j = 0; j + 1 < result.columnCount(); ++j)
         {
             result(i, j) /= result(i, result.columnCount() - 1);
         }
+        result(i, result.columnCount() - 1) = 1.0;
     }
     return result;
 }

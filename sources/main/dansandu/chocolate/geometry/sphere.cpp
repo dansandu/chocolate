@@ -1,6 +1,6 @@
 #include "dansandu/chocolate/geometry/sphere.hpp"
-#include "dansandu/ballotin/exception.hpp"
 #include "dansandu/chocolate/common.hpp"
+#include "dansandu/journey/exception.hpp"
 #include "dansandu/math/common.hpp"
 
 using dansandu::math::pi;

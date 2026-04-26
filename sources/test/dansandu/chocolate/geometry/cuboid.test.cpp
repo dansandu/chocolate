@@ -10,7 +10,7 @@
 
 using dansandu::ballotin::file_system::readBinaryFile;
 using dansandu::ballotin::file_system::writeBinaryFile;
-using dansandu::canvas::color::Colors;
+using dansandu::canvas::color::Color;
 using dansandu::canvas::gif::getGifBinary;
 using dansandu::canvas::image::Image;
 using dansandu::chocolate::transposed;
@@ -39,7 +39,7 @@ TEST_CASE("cuboid")
         tVertices = dehomogenized(tVertices) * transposed(viewport(width, height));
 
         auto frame = Image{width, height};
-        drawWireframe(tVertices, triangles, Colors::magenta, frame);
+        drawWireframe(tVertices, triangles, Color::magenta, frame);
         images.push_back(std::move(frame));
     }
 

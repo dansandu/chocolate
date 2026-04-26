@@ -1,7 +1,7 @@
 #pragma once
 
-#include "dansandu/ballotin/logging.hpp"
 #include "dansandu/canvas/color.hpp"
+#include "dansandu/journey/logging.hpp"
 #include "dansandu/math/matrix.hpp"
 
 namespace dansandu::chocolate
@@ -16,6 +16,8 @@ using ConstantPoint2View = dansandu::math::matrix::ConstantMatrixView<int, 1, 2>
 using Point2 = dansandu::math::matrix::Matrix<int, 1, 2>;
 
 using Matrix4 = dansandu::math::matrix::Matrix<double, 4, 4>;
+
+using ColumnVector = dansandu::math::matrix::Matrix<double, dynamic, 1>;
 
 using Vector2 = dansandu::math::matrix::Matrix<double, 1, 2>;
 
@@ -34,6 +36,8 @@ using Normals = dansandu::math::matrix::Matrix<double, dynamic, 3>;
 using TextureMapping = dansandu::math::matrix::Matrix<double, dynamic, 2>;
 
 using ConstantMatrix4View = dansandu::math::matrix::ConstantMatrixView<double, 4, 4>;
+
+using ConstantColumnVectorView = dansandu::math::matrix::ConstantMatrixView<double, dynamic, 1>;
 
 using ConstantVector2View = dansandu::math::matrix::ConstantMatrixView<double, 1, 2>;
 
@@ -57,17 +61,19 @@ using dansandu::math::matrix::sliceRow;
 
 inline Vector3 toVector3(const dansandu::canvas::color::Color color)
 {
-    return Vector3{{color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0}};
+    return Vector3{{color.getRedChannel() / 255.0, color.getGreenChannel() / 255.0, color.getBlueChannel() / 255.0}};
 }
 
 inline dansandu::canvas::color::Color toColor(const ConstantVector3View vector)
 {
     using dansandu::canvas::color::Color;
 
-    const auto truncated = [](const double value)
-    { return (value >= 1.0) * 255 + ((value > 0.0) & (value < 1.0)) * static_cast<Color::value_type>(255.0 * value); };
+    const auto clamped = [](const double value)
+    {
+        return (value >= 1.0) * 255 + ((value > 0.0) & (value < 1.0)) * static_cast<uint8_t>(std::round(255.0 * value));
+    };
 
-    return Color(truncated(vector.x()), truncated(vector.y()), truncated(vector.z()));
+    return Color(clamped(vector.x()), clamped(vector.y()), clamped(vector.z()));
 }
 
 template<typename T, int M, int N, dansandu::math::matrix::DataStorageStrategy S>
