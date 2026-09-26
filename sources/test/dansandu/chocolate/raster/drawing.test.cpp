@@ -38,7 +38,7 @@ using dansandu::chocolate::geometry::cuboid::generateTriangleMeshCuboid;
 using dansandu::chocolate::geometry::plane::generatePlane;
 using dansandu::chocolate::geometry::sphere::generateSphere;
 using dansandu::chocolate::raster::drawing::drawFlat;
-using dansandu::chocolate::raster::drawing::drawTexture;
+using dansandu::chocolate::raster::drawing::drawTextureNearestNeighborFiltering;
 using dansandu::chocolate::raster::drawing::drawWireframe;
 using dansandu::math::pi;
 using dansandu::math::matrix::normalized;
@@ -124,10 +124,10 @@ TEST_CASE("drawing")
 
         const auto [vertices, triangles] = generatePlane(100.0, 100.0, 2, 2);
 
-        const auto textureCoodinates = vertices * transposed(translate(50.0, 50.0, 0.0));
+        const auto textureCoordinates = vertices * transposed(translate(50.0, 50.0, 0.0));
 
         const auto textureMapping =
-            TextureMapping{Slicer<0, 0, dynamic, 2>::slice(textureCoodinates, textureCoodinates.rowCount())};
+            TextureMapping{Slicer<0, 0, dynamic, 2>::slice(textureCoordinates, textureCoordinates.rowCount())};
 
         const auto rotation = -0.25 * pi<double>;
 
@@ -142,7 +142,7 @@ TEST_CASE("drawing")
 
         auto image = Image{width, height};
 
-        drawTexture(tVertices, depth, triangles, textureMapping, texture, image);
+        drawTextureNearestNeighborFiltering(tVertices, depth, triangles, textureMapping, texture, image);
 
         REQUIRE(checkImage(image, "perspective_texture.bmp"));
     }
@@ -210,7 +210,7 @@ TEST_CASE("drawing")
 
             auto frame = Image{width, height};
 
-            drawTexture(tVertices, depth, culledTriangles, textureMapping, texture, frame);
+            drawTextureNearestNeighborFiltering(tVertices, depth, culledTriangles, textureMapping, texture, frame);
             images.push_back(std::move(frame));
         }
 
@@ -292,7 +292,7 @@ TEST_CASE("drawing")
 
             auto frame = Image{width, height};
 
-            drawTexture(tVertices, culledPolygons, textureMapping, texture, frame);
+            drawTextureNearestNeighborFiltering(tVertices, culledPolygons, textureMapping, texture, frame);
             images.push_back(std::move(frame));
         }
 
