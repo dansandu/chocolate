@@ -73,9 +73,10 @@ void drawWireframe(const ConstantVerticesView vertices, const ConstantTrianglesV
     }
 }
 
-void drawTexture(const ConstantVerticesView vertices, const ConstantColumnVectorView depth,
-                 const ConstantTrianglesView triangles, const ConstantTextureMappingView textureMapping,
-                 const Image& texture, Image& image)
+void drawTextureNearestNeighborFiltering(const ConstantVerticesView vertices, const ConstantColumnVectorView depth,
+                                         const ConstantTrianglesView triangles,
+                                         const ConstantTextureMappingView textureMapping, const Image& texture,
+                                         Image& image)
 {
     const auto getVertex = [&](const int t, const int v) { return Vector3Slicer::slice(vertices, triangles(t, v)); };
 
@@ -116,9 +117,10 @@ void drawTexture(const ConstantVerticesView vertices, const ConstantColumnVector
     }
 }
 
-void drawTexture(const ConstantVerticesView vertices, const ConstantPolygonsView polygons,
-                 const ConstantTextureMappingView textureMapping, const dansandu::canvas::image::Image& texture,
-                 dansandu::canvas::image::Image& image)
+void drawTextureNearestNeighborFiltering(const ConstantVerticesView vertices, const ConstantPolygonsView polygons,
+                                         const ConstantTextureMappingView textureMapping,
+                                         const dansandu::canvas::image::Image& texture,
+                                         dansandu::canvas::image::Image& image)
 {
     const auto getVertex = [&](const int i, const int v) { return Vector3Slicer::slice(vertices, polygons(i, v)); };
 
